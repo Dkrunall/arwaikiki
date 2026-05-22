@@ -162,7 +162,7 @@ export default function ARScene({ cocktail }: ARSceneProps) {
   const aframeSceneHTML = `
     <a-scene
       embedded
-      arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; maxDetectionRate: 60; canvasWidth: 640; canvasHeight: 480;"
+      arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
       renderer="logarithmicDepthBuffer: true; precision: medium;"
       vr-mode-ui="enabled: false"
       loading-screen="dotsColor: #510909; backgroundColor: #fcefd4"
