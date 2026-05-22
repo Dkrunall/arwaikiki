@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Loader2, Camera, Compass } from 'lucide-react';
+import { Camera } from 'lucide-react';
 import { Cocktail } from '@/types/cocktail';
 
 interface ARSceneProps {
@@ -13,106 +13,146 @@ export default function ARScene({ cocktail }: ARSceneProps) {
   const [error, setError] = useState<string | null>(null);
   const [markerDetected, setMarkerDetected] = useState(false);
 
+  // ── Effect 1: load scripts + register A-Frame component ──────────────────
   useEffect(() => {
     let isMounted = true;
 
-    // Listen to custom marker detection events dispatched by the A-Frame runtime
-    const handleFound = () => {
-      if (isMounted) setMarkerDetected(true);
-    };
-    const handleLost = () => {
-      if (isMounted) setMarkerDetected(false);
-    };
-
+    const handleFound = () => { if (isMounted) setMarkerDetected(true); };
+    const handleLost  = () => { if (isMounted) setMarkerDetected(false); };
     window.addEventListener('waikiki-marker-found', handleFound);
-    window.addEventListener('waikiki-marker-lost', handleLost);
+    window.addEventListener('waikiki-marker-lost',  handleLost);
 
-    // Dynamically inject scripts
-    const loadScript = (src: string): Promise<void> => {
-      return new Promise((resolve, reject) => {
-        const existing = document.querySelector(`script[src="${src}"]`);
-        if (existing) {
-          resolve();
-          return;
-        }
-        const script = document.createElement('script');
-        script.src = src;
-        script.async = false; // sequential load order matters for A-Frame → AR.js
-        script.onload = () => resolve();
-        script.onerror = () => reject(new Error(`Failed to load: ${src}`));
-        document.head.appendChild(script);
+    const loadScript = (src: string): Promise<void> =>
+      new Promise((resolve, reject) => {
+        if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+        const s = document.createElement('script');
+        s.src = src;
+        s.async = false;
+        s.onload = () => resolve();
+        s.onerror = () => reject(new Error(`Failed to load: ${src}`));
+        document.head.appendChild(s);
       });
-    };
-
-    // Remove any stale old A-Frame / AR.js scripts that may be cached in DOM
-    const staleScripts = document.querySelectorAll(
-      'script[src*="aframe.io/releases/1.2"], script[src*="AR.js@3.3"]'
-    );
-    staleScripts.forEach((s) => s.remove());
 
     const initAR = async () => {
       try {
-        // 1. Load A-Frame (1.4.2 - stable, works with AR.js 3.4.5)
         await loadScript('https://aframe.io/releases/1.4.2/aframe.min.js');
         if (!isMounted) return;
-
-        // 2. Load AR.js 3.4.5 (stable, fixes camera recalibration errors)
         await loadScript('https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js');
         if (!isMounted) return;
 
-        // Register custom A-Frame component — only used to sync React HUD state.
-        // AR.js already natively shows/hides marker children based on tracking;
-        // we do NOT manipulate scale/position here to avoid hiding the card.
         const AFRAME = (window as any).AFRAME;
         if (AFRAME && !AFRAME.components['marker-handler']) {
           AFRAME.registerComponent('marker-handler', {
-            init: function() {
-              const marker = this.el;
-              marker.addEventListener('markerFound', () => {
-                window.dispatchEvent(new CustomEvent('waikiki-marker-found'));
-              });
-              marker.addEventListener('markerLost', () => {
-                window.dispatchEvent(new CustomEvent('waikiki-marker-lost'));
-              });
-            }
+            init: function () {
+              this.el.addEventListener('markerFound', () =>
+                window.dispatchEvent(new CustomEvent('waikiki-marker-found')));
+              this.el.addEventListener('markerLost', () =>
+                window.dispatchEvent(new CustomEvent('waikiki-marker-lost')));
+            },
           });
         }
 
-        setArLoaded(true);
+        if (isMounted) setArLoaded(true);
       } catch (err: any) {
-        console.error(err);
-        setError(err.message || 'Failed to initialize WebAR');
+        if (isMounted) setError(err.message || 'Failed to initialize WebAR');
       }
     };
 
     initAR();
 
-    // Clean up DOM on unmount
     return () => {
       isMounted = false;
       window.removeEventListener('waikiki-marker-found', handleFound);
-      window.removeEventListener('waikiki-marker-lost', handleLost);
+      window.removeEventListener('waikiki-marker-lost',  handleLost);
+    };
+  }, []);
 
-      // Remove video element added by AR.js
-      const videos = document.querySelectorAll('video');
-      videos.forEach((v) => v.remove());
+  // ── Effect 2: inject <a-scene> directly onto document.body ───────────────
+  // A-Frame must NOT be nested inside a React-managed node — it mutates
+  // <html>, <body>, and appends canvases in ways React fights with.
+  useEffect(() => {
+    if (!arLoaded) return;
 
-      // Remove A-Frame scene element
-      const scenes = document.querySelectorAll('a-scene');
-      scenes.forEach((s) => s.remove());
+    const ingredientsText = Array.isArray(cocktail.ingredients)
+      ? cocktail.ingredients.join(', ')
+      : String(cocktail.ingredients);
+    const cardColor = cocktail.card_color || '#510909';
+    const glowColor = cocktail.card_color || '#c29a53';
 
-      // Restore HTML and Body styles mutated by A-Frame
+    const container = document.createElement('div');
+    container.id = 'ar-scene-root';
+    container.style.cssText =
+      'position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;';
+
+    container.innerHTML = `
+      <a-scene
+        arjs="sourceType: webcam; debugUIEnabled: false; videoTexture: true;"
+        renderer="logarithmicDepthBuffer: true; precision: medium; antialias: true;"
+        vr-mode-ui="enabled: false"
+        loading-screen="enabled: false"
+      >
+        <a-assets timeout="3000">
+          <img id="cocktail-img" src="${cocktail.image_url}" crossorigin="anonymous">
+        </a-assets>
+
+        <a-marker preset="hiro" marker-handler emitevents="true"
+                  smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
+          <a-entity rotation="-70 0 0">
+
+            <a-plane position="0 0 0"    width="2"    height="3"    color="${cardColor}"></a-plane>
+            <a-plane position="0 0 -0.01" width="2.06" height="3.06" color="${glowColor}"></a-plane>
+
+            <a-image src="#cocktail-img" position="0 0.4 0.45" width="1.8" height="1.8"
+              animation__bob="property: position; from: 0 0.4 0.45; to: 0 0.52 0.45; dir: alternate; loop: true; dur: 2200; easing: easeInOutSine"
+              animation__rotate="property: rotation; from: 0 -8 0; to: 0 8 0; dir: alternate; loop: true; dur: 3000; easing: easeInOutSine">
+            </a-image>
+
+            <a-text value="${cocktail.name.toUpperCase()}"
+              position="0 -0.65 0.1" align="center" color="white" width="4.5" font="exo2bold">
+            </a-text>
+
+            <a-plane position="0 -1.15 0.08" width="1.8"  height="0.75" color="${glowColor}"></a-plane>
+            <a-plane position="0 -1.15 0.09" width="1.74" height="0.69" color="#2a0404"></a-plane>
+
+            <a-text value="${ingredientsText}"
+              position="0 -1.02 0.12" align="center" color="#cbd5e1" width="2.6">
+            </a-text>
+            <a-text value="Rs.${cocktail.price}"
+              position="0 -1.3 0.12" align="center" color="${glowColor}" width="3.2" font="exo2bold">
+            </a-text>
+
+            <a-circle position="-0.65 -1.3 0.14" radius="0.08" color="#c29a53"></a-circle>
+            <a-text value="~" position="-0.65 -1.28 0.16" align="center" color="white" width="3.5" font="exo2bold">
+            </a-text>
+
+          </a-entity>
+        </a-marker>
+
+        <a-entity camera></a-entity>
+      </a-scene>
+    `;
+
+    document.body.appendChild(container);
+
+    return () => {
+      // Remove the scene container we added
+      const el = document.getElementById('ar-scene-root');
+      if (el) el.remove();
+
+      // Clean up everything A-Frame / AR.js added to the DOM
+      document.querySelectorAll('video').forEach(v => v.remove());
+      document.querySelectorAll('a-scene').forEach(s => s.remove());
+      document.querySelectorAll('.a-canvas, .a-loader-title, .a-enter-vr, .a-enter-ar')
+        .forEach(el => el.remove());
+
       document.documentElement.style.removeProperty('overflow');
       document.documentElement.classList.remove('a-html');
       document.body.style.removeProperty('overflow');
       document.body.classList.remove('a-body');
-
-      // Remove canvas and loading overlays
-      const uiElements = document.querySelectorAll('.a-canvas, .a-loader-title, .a-enter-vr, .a-enter-ar');
-      uiElements.forEach((el) => el.remove());
     };
-  }, []);
+  }, [arLoaded, cocktail]);
 
+  // ── Render: only the React HUD — A-Frame scene lives on body directly ────
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-[var(--background)] text-[var(--foreground)] p-6">
@@ -139,128 +179,48 @@ export default function ARScene({ cocktail }: ARSceneProps) {
         </div>
         <h2 className="text-xl font-display font-black tracking-widest mb-1 text-[var(--brand-maroon)]">WAIKIKI BAR</h2>
         <p className="text-[var(--brand-maroon)] text-xs font-bold tracking-widest uppercase animate-pulse">Starting AR Engine...</p>
-        <p className="text-[10px] text-[var(--brand-maroon)]/50 mt-6 text-center">Allow camera permission if requested by the browser.</p>
+        <p className="text-[10px] text-[var(--brand-maroon)]/50 mt-6 text-center">Allow camera permission when prompted.</p>
       </div>
     );
   }
 
-  // Guard against Supabase returning ingredients as a non-array (e.g. text column)
-  const ingredientsText = Array.isArray(cocktail.ingredients)
-    ? cocktail.ingredients.join(', ')
-    : String(cocktail.ingredients);
-  const cardColor = cocktail.card_color || '#510909';
-  const glowColor = cocktail.card_color || '#c29a53';
-
-  const aframeSceneHTML = `
-    <a-scene
-      arjs="sourceType: webcam; debugUIEnabled: false; videoTexture: true;"
-      renderer="logarithmicDepthBuffer: true; precision: medium; antialias: true; alpha: true;"
-      vr-mode-ui="enabled: false"
-      loading-screen="dotsColor: #510909; backgroundColor: #fcefd4"
-      style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10;"
-    >
-      <a-assets timeout="3000">
-        <img id="cocktail-img" src="${cocktail.image_url}" crossorigin="anonymous">
-      </a-assets>
-
-      <a-marker preset="hiro" marker-handler emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
-        <!-- No hidden initial scale/position — AR.js shows/hides marker children
-             automatically when tracking is gained or lost. -->
-        <a-entity id="card-container" rotation="-70 0 0">
-
-          <!-- Card background plane -->
-          <a-plane position="0 0 0" width="2" height="3" color="${cardColor}"></a-plane>
-
-          <!-- Neon border glow plane slightly behind -->
-          <a-plane position="0 0 -0.01" width="2.06" height="3.06" color="${glowColor}"></a-plane>
-
-          <!-- Cocktail PNG: crossorigin served via <a-assets> so WebGL can use the texture -->
-          <a-image src="#cocktail-img" position="0 0.4 0.45" width="1.8" height="1.8" rotation="0 0 0"
-            animation__bob="property: position; from: 0 0.4 0.45; to: 0 0.52 0.45; dir: alternate; loop: true; dur: 2200; easing: easeInOutSine"
-            animation__rotate="property: rotation; from: 0 -8 0; to: 0 8 0; dir: alternate; loop: true; dur: 3000; easing: easeInOutSine"></a-image>
-
-          <!-- Cocktail name text -->
-          <a-text value="${cocktail.name.toUpperCase()}" position="0 -0.65 0.1" align="center" color="white" width="4.5" font="exo2bold" rotation="0 0 0"></a-text>
-
-          <!-- Translucent slate description bubble border -->
-          <a-plane position="0 -1.15 0.08" width="1.8" height="0.75" color="${glowColor}" rotation="0 0 0"></a-plane>
-
-          <!-- Translucent slate description bubble base -->
-          <a-plane position="0 -1.15 0.09" width="1.74" height="0.69" color="#2a0404" rotation="0 0 0"></a-plane>
-
-          <!-- Ingredients text -->
-          <a-text value="${ingredientsText}" position="0 -1.02 0.12" align="center" color="#cbd5e1" width="2.6" rotation="0 0 0"></a-text>
-
-          <!-- Price text -->
-          <a-text value="Rs.${cocktail.price}" position="0 -1.3 0.12" align="center" color="${glowColor}" width="3.2" font="exo2bold" rotation="0 0 0"></a-text>
-
-          <!-- Waikiki wave logo badge (bottom left of bubble/card) -->
-          <a-circle position="-0.65 -1.3 0.14" radius="0.08" color="#c29a53" rotation="0 0 0"></a-circle>
-          <a-text value="~" position="-0.65 -1.28 0.16" align="center" color="white" width="3.5" font="exo2bold" rotation="0 0 0"></a-text>
-
-        </a-entity>
-      </a-marker>
-      <a-entity camera></a-entity>
-    </a-scene>
-  `;
-
-
   return (
-    <>
-      {/* Sci-Fi Camera HUD Scan Overlay */}
-      <div className="fixed inset-0 z-40 pointer-events-none flex flex-col justify-between p-6">
-        {/* Top bar HUD */}
-        <div className="flex justify-between items-center bg-[#fcefd4]/75 backdrop-blur-[2px] border border-[var(--brand-maroon)]/15 p-4 rounded-2xl w-full">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-[var(--brand-maroon)]">AR.CAM ACTIVE</span>
-          </div>
-          <div className="text-right">
-            <span className="text-[10px] font-mono text-[var(--brand-maroon)]/70">
-              TARGET: {cocktail.name.toUpperCase()}
-            </span>
-          </div>
+    <div className="fixed inset-0 z-10 pointer-events-none flex flex-col justify-between p-6">
+      {/* Top bar HUD */}
+      <div className="flex justify-between items-center bg-[#fcefd4]/75 backdrop-blur-[2px] border border-[var(--brand-maroon)]/15 p-4 rounded-2xl w-full">
+        <div className="flex items-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
+          <span className="text-[10px] font-black uppercase tracking-wider text-[var(--brand-maroon)]">AR.CAM ACTIVE</span>
         </div>
- 
-        {/* Center Target Box */}
-        <div className="self-center flex flex-col items-center justify-center">
-          <div 
-            className={`w-64 h-64 border-2 rounded-[32px] relative overflow-hidden flex flex-col items-center justify-center transition-all duration-500 ${
-              markerDetected 
-                ? 'border-[var(--brand-maroon)] bg-[var(--brand-maroon)]/5 shadow-[0_0_30px_rgba(81,9,9,0.15)]' 
-                : 'border-[var(--brand-maroon)]/20 bg-[#fcefd4]/25'
-            }`}
-          >
-            {/* Animated target scanning lines */}
-            {!markerDetected && <div className="absolute inset-x-0 scanner-line" />}
-            
-            {/* Corner Indicators */}
-            <div className="absolute top-4 left-4 w-4 h-4 border-t-2 border-l-2 border-[var(--brand-maroon)]/45 rounded-tl-lg" />
-            <div className="absolute top-4 right-4 w-4 h-4 border-t-2 border-r-2 border-[var(--brand-maroon)]/45 rounded-tr-lg" />
-            <div className="absolute bottom-4 left-4 w-4 h-4 border-b-2 border-l-2 border-[var(--brand-maroon)]/45 rounded-bl-lg" />
-            <div className="absolute bottom-4 right-4 w-4 h-4 border-b-2 border-r-2 border-[var(--brand-maroon)]/45 rounded-br-lg" />
- 
-            {/* Status indicators */}
-            <p className={`font-display font-black text-center text-xs px-6 uppercase tracking-wider transition-colors duration-300 ${
-              markerDetected ? 'text-[var(--brand-maroon)]' : 'text-[var(--brand-maroon)]/60'
-            }`}>
-              {markerDetected ? 'Hiro Coaster Locked!' : 'Align Coaster in Target'}
-            </p>
-            <p className="text-[9px] font-semibold text-[var(--brand-maroon)]/65 uppercase tracking-widest mt-1.5 px-6 text-center">
-              {markerDetected ? 'Card rendering loaded' : 'Keep camera steady'}
-            </p>
-          </div>
-        </div>
-
-        {/* Bottom space helper (offsets BottomBar content) */}
-        <div className="h-20" />
+        <span className="text-[10px] font-mono text-[var(--brand-maroon)]/70">
+          TARGET: {cocktail.name.toUpperCase()}
+        </span>
       </div>
 
-      {/* Renders the WebGL / AR.js markup directly to the page */}
-      <div 
-        className="w-full h-full absolute inset-0 z-10" 
-        dangerouslySetInnerHTML={{ __html: aframeSceneHTML }} 
-      />
-    </>
+      {/* Center target box */}
+      <div className="self-center">
+        <div className={`w-64 h-64 border-2 rounded-[32px] relative overflow-hidden flex flex-col items-center justify-center transition-all duration-500 ${
+          markerDetected
+            ? 'border-[var(--brand-maroon)] bg-[var(--brand-maroon)]/5 shadow-[0_0_30px_rgba(81,9,9,0.15)]'
+            : 'border-[var(--brand-maroon)]/20 bg-[#fcefd4]/25'
+        }`}>
+          {!markerDetected && <div className="absolute inset-x-0 scanner-line" />}
+          <div className="absolute top-4 left-4  w-4 h-4 border-t-2 border-l-2 border-[var(--brand-maroon)]/45 rounded-tl-lg" />
+          <div className="absolute top-4 right-4 w-4 h-4 border-t-2 border-r-2 border-[var(--brand-maroon)]/45 rounded-tr-lg" />
+          <div className="absolute bottom-4 left-4  w-4 h-4 border-b-2 border-l-2 border-[var(--brand-maroon)]/45 rounded-bl-lg" />
+          <div className="absolute bottom-4 right-4 w-4 h-4 border-b-2 border-r-2 border-[var(--brand-maroon)]/45 rounded-br-lg" />
+          <p className={`font-display font-black text-center text-xs px-6 uppercase tracking-wider ${
+            markerDetected ? 'text-[var(--brand-maroon)]' : 'text-[var(--brand-maroon)]/60'
+          }`}>
+            {markerDetected ? 'Hiro Coaster Locked!' : 'Align Coaster in Target'}
+          </p>
+          <p className="text-[9px] font-semibold text-[var(--brand-maroon)]/65 uppercase tracking-widest mt-1.5 px-6 text-center">
+            {markerDetected ? 'Card rendering loaded' : 'Keep camera steady'}
+          </p>
+        </div>
+      </div>
+
+      <div className="h-20" />
+    </div>
   );
 }
