@@ -60,29 +60,18 @@ export default function ARScene({ cocktail }: ARSceneProps) {
         await loadScript('https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js');
         if (!isMounted) return;
 
-        // Register custom A-Frame component for marker event handling
+        // Register custom A-Frame component — only used to sync React HUD state.
+        // AR.js already natively shows/hides marker children based on tracking;
+        // we do NOT manipulate scale/position here to avoid hiding the card.
         const AFRAME = (window as any).AFRAME;
         if (AFRAME && !AFRAME.components['marker-handler']) {
           AFRAME.registerComponent('marker-handler', {
             init: function() {
               const marker = this.el;
-
-              // Resolve container at event time so there is no init-timing race
-              // where the child <a-entity> hasn't been upgraded by A-Frame yet.
               marker.addEventListener('markerFound', () => {
-                const container = marker.querySelector('#card-container');
-                if (container) {
-                  container.emit('markerfound');
-                }
                 window.dispatchEvent(new CustomEvent('waikiki-marker-found'));
               });
-
               marker.addEventListener('markerLost', () => {
-                const container = marker.querySelector('#card-container');
-                if (container) {
-                  container.setAttribute('position', '0 -2 -2');
-                  container.setAttribute('scale', '0.01 0.01 0.01');
-                }
                 window.dispatchEvent(new CustomEvent('waikiki-marker-lost'));
               });
             }
@@ -170,17 +159,14 @@ export default function ARScene({ cocktail }: ARSceneProps) {
       loading-screen="dotsColor: #510909; backgroundColor: #fcefd4"
       style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10;"
     >
-      <a-assets timeout="10000">
+      <a-assets timeout="3000">
         <img id="cocktail-img" src="${cocktail.image_url}" crossorigin="anonymous">
       </a-assets>
 
       <a-marker preset="hiro" marker-handler emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
-        <a-entity id="card-container"
-                  position="0 -2 -2"
-                  scale="0.01 0.01 0.01"
-                  rotation="-70 0 0"
-                  animation__scale="property: scale; from: 0.01 0.01 0.01; to: 1 1 1; dur: 800; easing: easeOutBack; startEvents: markerfound"
-                  animation__pos="property: position; from: 0 -2 -2; to: 0 0 0; dur: 800; easing: easeOutBack; startEvents: markerfound">
+        <!-- No hidden initial scale/position — AR.js shows/hides marker children
+             automatically when tracking is gained or lost. -->
+        <a-entity id="card-container" rotation="-70 0 0">
 
           <!-- Card background plane -->
           <a-plane position="0 0 0" width="2" height="3" color="${cardColor}"></a-plane>
