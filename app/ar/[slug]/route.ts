@@ -85,8 +85,8 @@ function buildHTML(cocktails: Cocktail[], startIndex: number, origin: string): s
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <title>Waikiki AR</title>
-<!-- A-Frame 1.6.0 + AR.js master — required combination per official docs -->
-<script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+<!-- Exact CDN combo from official AR.js docs/examples -->
+<script src="https://cdn.jsdelivr.net/gh/aframevr/aframe@1.6.0/dist/aframe-master.min.js"></script>
 <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -198,19 +198,36 @@ ${tot <= 1 ? '.navbtn{opacity:.25;pointer-events:none}' : ''}
   <div class="ldsub">Starting AR Camera&hellip;</div>
 </div>
 
-<!-- A-Frame scene lives directly on body — no React wrapper, no conflicts -->
-<a-scene embedded
-  arjs="sourceType: webcam; debugUIEnabled: false; videoTexture: true; maxDetectionRate: 60; patternRatio: 0.75;"
-  renderer="antialias: false;"
-  vr-mode-ui="enabled: false"
-  loading-screen="enabled: false"
->
+<!-- Register marker event component BEFORE a-scene is parsed (official AR.js pattern) -->
+<script>
+AFRAME.registerComponent('waikiki-events', {
+  init: function() {
+    var marker = this.el;
+    var scanarea = document.getElementById('scanarea');
+    var camst    = document.getElementById('camst');
+    var tips     = document.getElementById('tips');
+    var tipsTimer = setTimeout(function(){ if(tips) tips.style.display='block'; }, 9000);
+    marker.addEventListener('markerFound', function() {
+      clearTimeout(tipsTimer);
+      if(tips) tips.style.display='none';
+      if(scanarea) scanarea.classList.add('hide');
+      if(camst){ camst.textContent='✓ LOCKED'; camst.classList.add('locked'); }
+    });
+    marker.addEventListener('markerLost', function() {
+      if(scanarea) scanarea.classList.remove('hide');
+      if(camst){ camst.textContent='● SCANNING'; camst.classList.remove('locked'); }
+    });
+  }
+});
+</script>
+
+<!-- Minimal a-scene exactly matching official AR.js examples -->
+<a-scene embedded arjs='sourceType: webcam;' renderer='precision: medium;'>
   <a-assets timeout="8000">
     ${assetTags}
   </a-assets>
 
-  <a-marker preset="hiro" id="marker" emitevents="true"
-            smooth="true" smoothCount="5" smoothTolerance="0.05" smoothThreshold="2">
+  <a-marker preset="hiro" id="marker" waikiki-events>
     <a-entity rotation="-70 0 0">
 
       <!-- ── Glassmorphism card layers ─────────────────── -->
@@ -336,26 +353,6 @@ document.querySelector('a-scene').addEventListener('loaded', function() {
   var ld = document.getElementById('ld');
   ld.classList.add('gone');
   setTimeout(function(){ ld.style.display = 'none'; }, 700);
-});
-
-// Marker tracking → show/hide scan overlay
-var marker   = document.getElementById('marker');
-var scanarea = document.getElementById('scanarea');
-var camst    = document.getElementById('camst');
-var tips     = document.getElementById('tips');
-var tipsTimer = setTimeout(function(){ tips.style.display = 'block'; }, 8000);
-
-marker.addEventListener('markerFound', function() {
-  clearTimeout(tipsTimer);
-  tips.style.display = 'none';
-  scanarea.classList.add('hide');
-  camst.textContent = '✓ LOCKED';
-  camst.classList.add('locked');
-});
-marker.addEventListener('markerLost', function() {
-  scanarea.classList.remove('hide');
-  camst.textContent = '● SCANNING';
-  camst.classList.remove('locked');
 });
 
 // Navigate between cocktails (prev / next)
