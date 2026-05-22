@@ -85,9 +85,9 @@ function buildHTML(cocktails: Cocktail[], startIndex: number, origin: string): s
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <title>Waikiki AR</title>
-<!-- A-Frame + AR.js must load before body is parsed -->
-<script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
+<!-- A-Frame 1.6.0 + AR.js master — required combination per official docs -->
+<script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+<script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{width:100%;height:100%;overflow:hidden;background:#000;
@@ -199,9 +199,9 @@ ${tot <= 1 ? '.navbtn{opacity:.25;pointer-events:none}' : ''}
 </div>
 
 <!-- A-Frame scene lives directly on body — no React wrapper, no conflicts -->
-<a-scene
-  arjs="sourceType: webcam; debugUIEnabled: false; videoTexture: true;"
-  renderer="logarithmicDepthBuffer: true; precision: medium; antialias: true;"
+<a-scene embedded
+  arjs="sourceType: webcam; debugUIEnabled: false; videoTexture: true; maxDetectionRate: 60; patternRatio: 0.75;"
+  renderer="antialias: false;"
   vr-mode-ui="enabled: false"
   loading-screen="enabled: false"
 >
@@ -210,7 +210,7 @@ ${tot <= 1 ? '.navbtn{opacity:.25;pointer-events:none}' : ''}
   </a-assets>
 
   <a-marker preset="hiro" id="marker" emitevents="true"
-            smooth="true" smoothCount="8" smoothTolerance="0.02" smoothThreshold="5">
+            smooth="true" smoothCount="5" smoothTolerance="0.05" smoothThreshold="2">
     <a-entity rotation="-70 0 0">
 
       <!-- ── Glassmorphism card layers ─────────────────── -->
@@ -299,6 +299,20 @@ ${tot <= 1 ? '.navbtn{opacity:.25;pointer-events:none}' : ''}
     </div>
     <div id="scanlbl">Point at Hiro Coaster</div>
     <div id="scansub">Keep camera steady</div>
+    <div id="tips" style="display:none;margin-top:20px;background:rgba(0,0,0,.55);
+      backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+      border:1px solid rgba(194,154,83,.3);border-radius:14px;
+      padding:14px 18px;max-width:260px">
+      <div style="font-size:10px;font-weight:900;text-transform:uppercase;
+        letter-spacing:.15em;color:#c29a53;margin-bottom:8px">Having Trouble?</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.75);line-height:1.8">
+        &#8226; Hold phone 25&ndash;35 cm above marker<br/>
+        &#8226; Tilt phone so marker fills screen<br/>
+        &#8226; Needs bright, even lighting<br/>
+        &#8226; Keep phone still 2&ndash;3 seconds<br/>
+        &#8226; Marker must be flat &amp; unfolded
+      </div>
+    </div>
   </div>
 
   <div id="botbar">
@@ -328,8 +342,12 @@ document.querySelector('a-scene').addEventListener('loaded', function() {
 var marker   = document.getElementById('marker');
 var scanarea = document.getElementById('scanarea');
 var camst    = document.getElementById('camst');
+var tips     = document.getElementById('tips');
+var tipsTimer = setTimeout(function(){ tips.style.display = 'block'; }, 8000);
 
 marker.addEventListener('markerFound', function() {
+  clearTimeout(tipsTimer);
+  tips.style.display = 'none';
   scanarea.classList.add('hide');
   camst.textContent = '✓ LOCKED';
   camst.classList.add('locked');
