@@ -1,0 +1,142 @@
+@import "tailwindcss";
+
+:root {
+  --background: #fcefd4;
+  --foreground: #510909;
+  --brand-maroon: #510909;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-brand-maroon: var(--brand-maroon);
+  --font-sans: var(--font-outfit), ui-sans-serif, system-ui;
+  --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+/* Glassmorphism helpers for warm light theme */
+.glass {
+  background: rgba(252, 239, 212, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(81, 9, 9, 0.08);
+}
+
+.glass-premium {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.75) 0%, rgba(252, 239, 212, 0.9) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(81, 9, 9, 0.12);
+  box-shadow: 0 8px 32px 0 rgba(81, 9, 9, 0.06);
+}
+
+/* Glow utilities for warm light theme */
+.glow-maroon {
+  box-shadow: 0 0 20px rgba(81, 9, 9, 0.15);
+  border-color: rgba(81, 9, 9, 0.3);
+}
+
+.glow-gold {
+  box-shadow: 0 0 20px rgba(194, 154, 83, 0.15);
+  border-color: rgba(194, 154, 83, 0.3);
+}
+
+/* Custom animations for WebAR Scanner Overlay */
+@keyframes scan {
+  0% {
+    top: 0%;
+    opacity: 0.1;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    top: 100%;
+    opacity: 0.1;
+  }
+}
+
+@keyframes radar-pulse {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.2);
+    opacity: 0;
+  }
+}
+
+@keyframes floating-slow {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(1deg);
+  }
+}
+
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+    visibility: visible;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+/* Scan HUD helpers */
+.scanner-line {
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--brand-maroon), transparent);
+  animation: scan 3s linear infinite;
+  box-shadow: 0 0 12px 2px rgba(81, 9, 9, 0.5);
+}
+
+.radar-pulse-ring {
+  animation: radar-pulse 3s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+
+.animate-floating {
+  animation: floating-slow 6s ease-in-out infinite;
+}
+
+.arjs-compositing-canvas {
+  display: none !important;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #fcefd4;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d4c3a3;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #510909;
+}
