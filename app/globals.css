@@ -118,9 +118,9 @@ body {
   animation: floating-slow 6s ease-in-out infinite;
 }
 
-.arjs-compositing-canvas {
-  display: none !important;
-}
+/* Note: do NOT hide .arjs-compositing-canvas — in AR.js 3.4.5 it is used as the
+   AR overlay canvas in some browser/device rendering paths. Hiding it makes the
+   3D content invisible while the camera feed still shows. */
 
 /* Custom scrollbars */
 ::-webkit-scrollbar {

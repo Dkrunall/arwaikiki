@@ -33,7 +33,11 @@ export default function AdminForm({ initialData, onSave, onCancel }: AdminFormPr
       setCategory(initialData.category);
       setDescription(initialData.description);
       setPrice(initialData.price.toString());
-      setIngredientsText(initialData.ingredients.join(', '));
+      setIngredientsText(
+        Array.isArray(initialData.ingredients)
+          ? initialData.ingredients.join(', ')
+          : String(initialData.ingredients)
+      );
       setCardColor(initialData.card_color || '#c29a53');
       setIsActive(initialData.is_active);
       setImageUrl(initialData.image_url || '');

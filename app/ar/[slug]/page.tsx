@@ -124,7 +124,7 @@ export default function ARViewerPage() {
   }
 
   return (
-    <div className="w-screen h-screen relative bg-black overflow-hidden select-none">
+    <div className="w-screen h-screen relative bg-black select-none">
       {/* Back Button overlay */}
       <div className="fixed top-6 left-6 z-50 pointer-events-auto">
         <Link

@@ -66,23 +66,23 @@ export default function ARScene({ cocktail }: ARSceneProps) {
           AFRAME.registerComponent('marker-handler', {
             init: function() {
               const marker = this.el;
-              const container = marker.querySelector('#card-container');
 
+              // Resolve container at event time so there is no init-timing race
+              // where the child <a-entity> hasn't been upgraded by A-Frame yet.
               marker.addEventListener('markerFound', () => {
+                const container = marker.querySelector('#card-container');
                 if (container) {
                   container.emit('markerfound');
                 }
-                // Dispatch a window event to trigger React HUD changes
                 window.dispatchEvent(new CustomEvent('waikiki-marker-found'));
               });
 
               marker.addEventListener('markerLost', () => {
+                const container = marker.querySelector('#card-container');
                 if (container) {
-                  // Reset container position and scale
                   container.setAttribute('position', '0 -2 -2');
                   container.setAttribute('scale', '0.01 0.01 0.01');
                 }
-                // Dispatch a window event to trigger React HUD changes
                 window.dispatchEvent(new CustomEvent('waikiki-marker-lost'));
               });
             }
@@ -155,7 +155,10 @@ export default function ARScene({ cocktail }: ARSceneProps) {
     );
   }
 
-  const ingredientsText = cocktail.ingredients.join(', ');
+  // Guard against Supabase returning ingredients as a non-array (e.g. text column)
+  const ingredientsText = Array.isArray(cocktail.ingredients)
+    ? cocktail.ingredients.join(', ')
+    : String(cocktail.ingredients);
   const cardColor = cocktail.card_color || '#510909';
   const glowColor = cocktail.card_color || '#c29a53';
 
@@ -167,44 +170,48 @@ export default function ARScene({ cocktail }: ARSceneProps) {
       loading-screen="dotsColor: #510909; backgroundColor: #fcefd4"
       style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10;"
     >
+      <a-assets timeout="10000">
+        <img id="cocktail-img" src="${cocktail.image_url}" crossorigin="anonymous">
+      </a-assets>
+
       <a-marker preset="hiro" marker-handler emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
-        <a-entity id="card-container" 
-                  position="0 -2 -2" 
-                  scale="0.01 0.01 0.01" 
+        <a-entity id="card-container"
+                  position="0 -2 -2"
+                  scale="0.01 0.01 0.01"
                   rotation="-70 0 0"
                   animation__scale="property: scale; from: 0.01 0.01 0.01; to: 1 1 1; dur: 800; easing: easeOutBack; startEvents: markerfound"
                   animation__pos="property: position; from: 0 -2 -2; to: 0 0 0; dur: 800; easing: easeOutBack; startEvents: markerfound">
-          
+
           <!-- Card background plane -->
           <a-plane position="0 0 0" width="2" height="3" color="${cardColor}"></a-plane>
-          
+
           <!-- Neon border glow plane slightly behind -->
           <a-plane position="0 0 -0.01" width="2.06" height="3.06" color="${glowColor}"></a-plane>
-          
-          <!-- Cocktail PNG standing upright popped out in front of the card, slow bobbing and rotating -->
-          <a-image src="${cocktail.image_url}" position="0 0.4 0.45" width="1.8" height="1.8" rotation="0 0 0"
+
+          <!-- Cocktail PNG: crossorigin served via <a-assets> so WebGL can use the texture -->
+          <a-image src="#cocktail-img" position="0 0.4 0.45" width="1.8" height="1.8" rotation="0 0 0"
             animation__bob="property: position; from: 0 0.4 0.45; to: 0 0.52 0.45; dir: alternate; loop: true; dur: 2200; easing: easeInOutSine"
             animation__rotate="property: rotation; from: 0 -8 0; to: 0 8 0; dir: alternate; loop: true; dur: 3000; easing: easeInOutSine"></a-image>
-          
+
           <!-- Cocktail name text -->
           <a-text value="${cocktail.name.toUpperCase()}" position="0 -0.65 0.1" align="center" color="white" width="4.5" font="exo2bold" rotation="0 0 0"></a-text>
-          
+
           <!-- Translucent slate description bubble border -->
           <a-plane position="0 -1.15 0.08" width="1.8" height="0.75" color="${glowColor}" rotation="0 0 0"></a-plane>
-          
+
           <!-- Translucent slate description bubble base -->
           <a-plane position="0 -1.15 0.09" width="1.74" height="0.69" color="#2a0404" rotation="0 0 0"></a-plane>
-          
+
           <!-- Ingredients text -->
           <a-text value="${ingredientsText}" position="0 -1.02 0.12" align="center" color="#cbd5e1" width="2.6" rotation="0 0 0"></a-text>
-          
+
           <!-- Price text -->
           <a-text value="Rs.${cocktail.price}" position="0 -1.3 0.12" align="center" color="${glowColor}" width="3.2" font="exo2bold" rotation="0 0 0"></a-text>
- 
+
           <!-- Waikiki wave logo badge (bottom left of bubble/card) -->
           <a-circle position="-0.65 -1.3 0.14" radius="0.08" color="#c29a53" rotation="0 0 0"></a-circle>
           <a-text value="~" position="-0.65 -1.28 0.16" align="center" color="white" width="3.5" font="exo2bold" rotation="0 0 0"></a-text>
-          
+
         </a-entity>
       </a-marker>
       <a-entity camera></a-entity>
