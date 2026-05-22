@@ -161,11 +161,11 @@ export default function ARScene({ cocktail }: ARSceneProps) {
 
   const aframeSceneHTML = `
     <a-scene
-      embedded
-      arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
-      renderer="logarithmicDepthBuffer: true; precision: medium;"
+      arjs="sourceType: webcam; debugUIEnabled: false; videoTexture: true;"
+      renderer="logarithmicDepthBuffer: true; precision: medium; antialias: true; alpha: true;"
       vr-mode-ui="enabled: false"
       loading-screen="dotsColor: #510909; backgroundColor: #fcefd4"
+      style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10;"
     >
       <a-marker preset="hiro" marker-handler emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
         <a-entity id="card-container" 
