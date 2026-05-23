@@ -231,27 +231,25 @@ AFRAME.registerComponent('waikiki-events', {
             smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
     <a-entity rotation="-70 0 0">
 
-      <!-- Single gold border — no stacked planes = no z-fighting pixels -->
-      <a-plane width="2.08" height="3.08" color="#c29a53" position="0 0 -0.01"></a-plane>
-      <!-- Dark glass card body -->
-      <a-plane width="2.0" height="3.0" color="#080614" opacity="0.93"
-               position="0 0 0" material="transparent: true;"></a-plane>
+      <!-- Gold border (well behind body — 0.1 gap prevents depth-buffer z-fight) -->
+      <a-plane width="2.08" height="3.08" color="#c29a53" position="0 0 -0.1"></a-plane>
+      <!-- Card body — fully opaque so camera/marker doesn't bleed through -->
+      <a-plane width="2.0" height="3.0" color="#080614" position="0 0 0"></a-plane>
 
-      <!-- Gold accent bars top / bottom -->
-      <a-plane width="2.0" height="0.06" color="#c29a53" position="0  1.47 0.01"></a-plane>
-      <a-plane width="2.0" height="0.06" color="#c29a53" position="0 -1.47 0.01"></a-plane>
+      <!-- Gold accent bars — 0.1 above body, no overlap ambiguity -->
+      <a-plane width="2.0" height="0.06" color="#c29a53" position="0  1.47 0.1"></a-plane>
+      <a-plane width="2.0" height="0.06" color="#c29a53" position="0 -1.47 0.1"></a-plane>
 
       <!-- Category badge -->
-      <a-plane width="1.2" height="0.24" color="#c29a53" opacity="0.25"
-               position="0 1.18 0.01" material="transparent: true;"></a-plane>
+      <a-plane width="1.2" height="0.24" color="#1a0a2e" position="0 1.18 0.1"></a-plane>
       <a-text id="ar-cat" value="${esc(f.category.toUpperCase())}"
-              position="0 1.18 0.02" align="center" color="#c29a53" width="2.8"
+              position="0 1.18 0.15" align="center" color="#c29a53" width="2.8"
               font="sourcecodepro"></a-text>
 
       <!-- Cocktail image — bob + tilt animations -->
       <a-image id="ar-img" src="#ci${startIndex}"
-               position="0 0.38 0.05" width="1.65" height="1.65"
-               animation__bob="property: position; from: 0 0.38 0.05; to: 0 0.52 0.05;
+               position="0 0.38 0.15" width="1.65" height="1.65"
+               animation__bob="property: position; from: 0 0.38 0.15; to: 0 0.52 0.15;
                  dir: alternate; loop: true; dur: 2200; easing: easeInOutSine"
                animation__tilt="property: rotation; from: 0 -5 0; to: 0 5 0;
                  dir: alternate; loop: true; dur: 3400; easing: easeInOutSine">
@@ -259,21 +257,20 @@ AFRAME.registerComponent('waikiki-events', {
 
       <!-- Cocktail name -->
       <a-text id="ar-name" value="${esc(f.name.toUpperCase())}"
-              position="0 -0.64 0.02" align="center" color="#ffffff"
+              position="0 -0.64 0.1" align="center" color="#ffffff"
               width="5.2" font="exo2bold"></a-text>
 
       <!-- Divider -->
-      <a-plane width="1.75" height="0.012" color="#c29a53" position="0 -0.87 0.01"></a-plane>
+      <a-plane width="1.75" height="0.012" color="#c29a53" position="0 -0.87 0.1"></a-plane>
 
       <!-- Ingredients -->
       <a-text id="ar-ings" value="${esc(fIngs)}"
-              position="0 -1.06 0.02" align="center" color="#7aadcc" width="3.2"></a-text>
+              position="0 -1.06 0.1" align="center" color="#7aadcc" width="3.2"></a-text>
 
-      <!-- Price -->
-      <a-plane width="2.0" height="0.52" color="#c29a53" opacity="0.15"
-               position="0 -1.33 0.01" material="transparent: true;"></a-plane>
+      <!-- Price strip -->
+      <a-plane width="2.0" height="0.52" color="#1a0a2e" position="0 -1.33 0.1"></a-plane>
       <a-text id="ar-price" value="Rs. ${f.price}"
-              position="0 -1.33 0.02" align="center" color="#c29a53"
+              position="0 -1.33 0.15" align="center" color="#c29a53"
               width="5.5" font="exo2bold"></a-text>
 
     </a-entity>
