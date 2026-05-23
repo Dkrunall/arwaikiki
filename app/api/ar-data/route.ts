@@ -11,7 +11,7 @@ const MOCK: Cocktail[] = [{
   id: 'mock', name: 'Blue Lagoon', slug: 'test', category: 'Signature',
   description: 'A vibrant blue tropical cocktail combining vodka, blue curaçao, and fresh lemonade.',
   ingredients: ['Vodka', 'Blue Curaçao', 'Lemonade', 'Lemon'],
-  price: 650, image_url: 'https://img.pngimg.com/uploads/cocktail/cocktail_PNG75.png',
+  price: 650, image_url: 'https://www.thecocktaildb.com/images/media/drink/adxcbq1641146824.jpg',
   card_color: '#0a4a7a', is_active: true,
 }];
 
