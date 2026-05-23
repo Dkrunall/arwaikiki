@@ -227,7 +227,8 @@ AFRAME.registerComponent('waikiki-events', {
     ${assetTags}
   </a-assets>
 
-  <a-marker preset="hiro" id="marker" waikiki-events>
+  <a-marker preset="hiro" id="marker" waikiki-events
+            smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
     <a-entity rotation="-70 0 0">
 
       <!-- ── Glassmorphism card layers ─────────────────── -->
@@ -315,7 +316,7 @@ AFRAME.registerComponent('waikiki-events', {
       <div id="sline"></div>
     </div>
     <div id="scanlbl">Point at Hiro Coaster</div>
-    <div id="scansub">Keep camera steady</div>
+    <div id="scansub">Hold 20&ndash;40 cm above &bull; Keep steady</div>
     <div id="tips" style="display:none;margin-top:20px;background:rgba(0,0,0,.55);
       backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
       border:1px solid rgba(194,154,83,.3);border-radius:14px;
