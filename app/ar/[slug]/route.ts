@@ -196,6 +196,48 @@ ${tot <= 1 ? '.navbtn{opacity:.25;pointer-events:none}' : ''}
 #cisub{font-size:10px;font-weight:700;letter-spacing:.15em;
   text-transform:uppercase;color:rgba(194,154,83,.9);margin-top:3px}
 #cicnt{font-size:10px;color:rgba(255,255,255,.4);margin-top:3px;letter-spacing:.08em}
+
+/* ── Tap hint pill ───────────────────────────────────────── */
+#taphint{position:fixed;bottom:110px;left:50%;transform:translateX(-50%);
+  z-index:150;background:rgba(81,9,9,.92);color:#fcefd4;
+  font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.15em;
+  padding:9px 20px;border-radius:20px;white-space:nowrap;
+  border:1px solid rgba(194,154,83,.35);
+  opacity:0;transition:opacity .4s;pointer-events:none}
+#taphint.on{opacity:1}
+
+/* ── Description bottom sheet ────────────────────────────── */
+#descbg{position:fixed;inset:0;z-index:500;background:rgba(81,9,9,.45);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  display:none;align-items:flex-end}
+#descbg.on{display:flex}
+#descsheet{background:#fcefd4;border-radius:28px 28px 0 0;
+  padding:28px 24px 48px;width:100%;max-height:75vh;overflow-y:auto;
+  transform:translateY(100%);
+  transition:transform .38s cubic-bezier(.34,1.56,.64,1)}
+#descbg.on #descsheet{transform:translateY(0)}
+#desc-handle{width:40px;height:4px;background:#510909;opacity:.2;
+  border-radius:2px;margin:0 auto 22px}
+#desc-cat{font-size:10px;font-weight:900;text-transform:uppercase;
+  letter-spacing:.2em;color:#c29a53;margin-bottom:6px}
+#desc-name{font-size:24px;font-weight:900;text-transform:uppercase;
+  letter-spacing:.06em;color:#510909;line-height:1.1;margin-bottom:14px}
+#desc-text{font-size:13px;color:#510909;opacity:.72;
+  line-height:1.75;margin-bottom:20px}
+#desc-ings-label{font-size:10px;font-weight:900;text-transform:uppercase;
+  letter-spacing:.15em;color:#510909;margin-bottom:10px}
+#desc-ings{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px}
+.ing-chip{padding:5px 13px;background:rgba(81,9,9,.07);
+  border:1px solid rgba(81,9,9,.14);border-radius:20px;
+  font-size:11px;font-weight:700;color:#510909;
+  text-transform:uppercase;letter-spacing:.08em}
+#desc-footer{display:flex;justify-content:space-between;align-items:center;
+  padding-top:16px;border-top:1px solid rgba(81,9,9,.1)}
+#desc-price{font-size:22px;font-weight:900;color:#510909}
+#desc-close{padding:12px 28px;background:#510909;color:#fcefd4;
+  font-weight:900;border:none;border-radius:14px;font-size:12px;
+  letter-spacing:.12em;text-transform:uppercase;cursor:pointer;
+  -webkit-tap-highlight-color:transparent}
 </style>
 </head>
 <body>
@@ -223,25 +265,38 @@ AFRAME.registerComponent('waikiki-events', {
       if(tips)    tips.style.display = 'none';
       if(scanarea) scanarea.classList.add('hide');
       if(camst)  { camst.textContent = '✓ LOCKED'; camst.classList.add('locked'); }
-      // Pop-in: scale 0→1 with springy easeOutBack
       if(card) card.setAttribute('animation__popin',
         'property:scale; from:0 0 0; to:1 1 1; dur:450; easing:easeOutBack');
+      // Enable tap zone + show hint briefly
+      var tz = document.getElementById('tapzone');
+      if(tz) tz.style.pointerEvents = 'auto';
+      var th = document.getElementById('taphint');
+      if(th){ th.classList.add('on'); setTimeout(function(){ th.classList.remove('on'); }, 3000); }
     });
 
     marker.addEventListener('markerLost', function() {
       if(scanarea) scanarea.classList.remove('hide');
       if(camst)  { camst.textContent = '● SCANNING'; camst.classList.remove('locked'); }
-      // Pop-out: scale 1→0
       if(card) card.setAttribute('animation__popout',
         'property:scale; from:1 1 1; to:0 0 0; dur:220; easing:easeInBack');
+      // Disable tap zone + close sheet if open
+      var tz = document.getElementById('tapzone');
+      if(tz) tz.style.pointerEvents = 'none';
+      closeDesc();
     });
   }
 });
 
-// Camera-ready event → update loading subtitle so user knows to point at coaster
+// camera-init → camera stream confirmed, update loading text with green tick
+window.addEventListener('camera-init', function() {
+  var s = document.getElementById('ldsub');
+  if(s){ s.textContent = '✓ Camera Active'; s.style.color = '#5cb85c'; }
+});
+
+// arjs-video-loaded → video appended to DOM, ready to scan
 window.addEventListener('arjs-video-loaded', function() {
   var s = document.getElementById('ldsub');
-  if(s) s.textContent = 'Point at Hiro Coaster ↓';
+  if(s){ s.textContent = 'Point at Hiro Coaster ↓'; s.style.color = ''; }
 });
 
 // Camera-error event → show actionable error instead of hanging spinner
@@ -269,40 +324,49 @@ window.addEventListener('camera-error', function() {
             smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
     <a-entity rotation="-70 0 0" scale="0 0 0">
 
-      <!-- Gold border at z=0, body at z=0.03 — body masks center, gold edges visible -->
-      <a-plane width="2.08" height="3.08" color="#c29a53" position="0 0 0"></a-plane>
-      <a-plane width="2.0"  height="3.0"  color="#080614" position="0 0 0.03"></a-plane>
+      <!-- Maroon border | cream body (matches landing page palette) -->
+      <a-plane width="2.08" height="3.08" color="#510909" position="0 0 0"></a-plane>
+      <a-plane width="2.0"  height="3.0"  color="#fcefd4" position="0 0 0.03"></a-plane>
 
-      <!-- Accent bars / badge / content at z=0.05–0.07 — clear of both base planes -->
-      <a-plane width="2.0" height="0.06" color="#c29a53" position="0  1.47 0.05"></a-plane>
-      <a-plane width="2.0" height="0.06" color="#c29a53" position="0 -1.47 0.05"></a-plane>
+      <!-- Maroon header/footer bars -->
+      <a-plane width="2.0" height="0.08" color="#510909" position="0  1.46 0.05"></a-plane>
+      <a-plane width="2.0" height="0.08" color="#510909" position="0 -1.46 0.05"></a-plane>
 
-      <a-plane width="1.2" height="0.24" color="#1a0a2e" position="0 1.18 0.05"></a-plane>
+      <!-- Category badge: maroon pill + cream text (exo2bold loads reliably) -->
+      <a-plane width="1.4" height="0.30" color="#510909" position="0 1.16 0.05"></a-plane>
       <a-text id="ar-cat" value="${esc(f.category.toUpperCase())}"
-              position="0 1.18 0.06" align="center" color="#c29a53" width="2.8"
-              font="sourcecodepro"></a-text>
+              position="0 1.16 0.09" align="center" color="#fcefd4"
+              width="3.0" font="exo2bold"></a-text>
 
+      <!-- Cocktail image -->
       <a-image id="ar-img" src="#ci${startIndex}"
-               position="0 0.38 0.07" width="1.65" height="1.65"
-               animation__bob="property: position; from: 0 0.38 0.07; to: 0 0.50 0.07;
+               position="0 0.33 0.08" width="1.55" height="1.55"
+               animation__bob="property: position; from: 0 0.33 0.08; to: 0 0.46 0.08;
                  dir: alternate; loop: true; dur: 2200; easing: easeInOutSine"
                animation__tilt="property: rotation; from: 0 -5 0; to: 0 5 0;
                  dir: alternate; loop: true; dur: 3400; easing: easeInOutSine">
       </a-image>
 
+      <!-- Gold divider -->
+      <a-plane width="1.75" height="0.006" color="#c29a53" position="0 -0.48 0.05"></a-plane>
+
+      <!-- Cocktail name in landing-page maroon -->
       <a-text id="ar-name" value="${esc(f.name.toUpperCase())}"
-              position="0 -0.64 0.05" align="center" color="#ffffff"
-              width="5.2" font="exo2bold"></a-text>
+              position="0 -0.65 0.05" align="center" color="#510909"
+              width="5.0" font="exo2bold"></a-text>
 
-      <a-plane width="1.75" height="0.012" color="#c29a53" position="0 -0.87 0.05"></a-plane>
+      <!-- Gold divider -->
+      <a-plane width="1.5" height="0.004" color="#c29a53" position="0 -0.84 0.05"></a-plane>
 
+      <!-- Ingredients in softer maroon -->
       <a-text id="ar-ings" value="${esc(fIngs)}"
-              position="0 -1.06 0.05" align="center" color="#7aadcc" width="3.2"></a-text>
+              position="0 -1.02 0.05" align="center" color="#7a2020" width="3.2"></a-text>
 
-      <a-plane width="2.0" height="0.52" color="#1a0a2e" position="0 -1.33 0.05"></a-plane>
+      <!-- Price strip: maroon bg + cream price text -->
+      <a-plane width="2.0" height="0.54" color="#510909" position="0 -1.33 0.05"></a-plane>
       <a-text id="ar-price" value="Rs. ${f.price}"
-              position="0 -1.33 0.06" align="center" color="#c29a53"
-              width="5.5" font="exo2bold"></a-text>
+              position="0 -1.33 0.09" align="center" color="#fcefd4"
+              width="5.2" font="exo2bold"></a-text>
 
     </a-entity>
   </a-marker>
@@ -354,6 +418,29 @@ window.addEventListener('camera-error', function() {
   </div>
 </div>
 
+<!-- Invisible tap zone — activated by markerFound, sits under HUD pointer-events -->
+<div id="tapzone" onclick="showDesc()"
+  style="position:fixed;inset:0;z-index:90;pointer-events:none;cursor:pointer"></div>
+
+<!-- Tap hint pill -->
+<div id="taphint">&#128197; Tap card for details</div>
+
+<!-- Description bottom sheet -->
+<div id="descbg" onclick="if(event.target===this)closeDesc()">
+  <div id="descsheet">
+    <div id="desc-handle"></div>
+    <div id="desc-cat"></div>
+    <div id="desc-name"></div>
+    <div id="desc-text"></div>
+    <div id="desc-ings-label">Ingredients</div>
+    <div id="desc-ings"></div>
+    <div id="desc-footer">
+      <div id="desc-price"></div>
+      <button id="desc-close" onclick="closeDesc()">Close &#10005;</button>
+    </div>
+  </div>
+</div>
+
 <script>
 var DATA = ${safeData};
 var cur  = ${startIndex};
@@ -368,9 +455,33 @@ document.querySelector('a-scene').addEventListener('loaded', function() {
   if (this.renderer) this.renderer.setClearColor(0x000000, 0);
 });
 
+// ── Description sheet ────────────────────────────────────────────
+function showDesc() {
+  var c = DATA[cur];
+  document.getElementById('desc-cat').textContent  = c.category;
+  document.getElementById('desc-name').textContent = c.name;
+  document.getElementById('desc-text').textContent = c.description || '';
+  document.getElementById('desc-price').textContent = 'Rs. ' + c.price;
+  var el = document.getElementById('desc-ings');
+  el.innerHTML = '';
+  var ings = Array.isArray(c.ingredients) ? c.ingredients
+    : String(c.ingredients).split(',');
+  ings.forEach(function(ing) {
+    var chip = document.createElement('span');
+    chip.className = 'ing-chip';
+    chip.textContent = ing.trim();
+    el.appendChild(chip);
+  });
+  document.getElementById('descbg').classList.add('on');
+}
+function closeDesc() {
+  document.getElementById('descbg').classList.remove('on');
+}
+
 // Navigate between cocktails (prev / next)
 function nav(dir) {
   cur = ((cur + dir) % tot + tot) % tot;
+  closeDesc();
   render();
 }
 
