@@ -437,12 +437,12 @@ window.addEventListener('camera-error', function() {
   </div>
 </div>
 
-<!-- Invisible tap zone — activated by markerFound, sits under HUD pointer-events -->
-<div id="tapzone" onclick="showDesc()"
+<!-- Invisible tap zone — activated by markerFound; tap/swipe handled in JS -->
+<div id="tapzone"
   style="position:fixed;inset:0;z-index:90;pointer-events:none;cursor:pointer"></div>
 
-<!-- Tap hint pill -->
-<div id="taphint">&#128197; Tap card for details</div>
+<!-- Swipe / tap hint pill -->
+<div id="taphint">&#8592; Swipe to browse &nbsp;&bull;&nbsp; Tap for info &#8594;</div>
 
 <!-- Description bottom sheet -->
 <div id="descbg" onclick="if(event.target===this)closeDesc()">
@@ -536,6 +536,28 @@ function nav(dir) {
     setTimeout(function() { navBusy = false; }, 440);
   }, 210);
 }
+
+// ── Swipe gesture navigation ──────────────────────────────────────
+(function() {
+  var sx = 0, sy = 0;
+  document.addEventListener('touchstart', function(e) {
+    sx = e.touches[0].clientX;
+    sy = e.touches[0].clientY;
+  }, { passive: true });
+  document.addEventListener('touchend', function(e) {
+    if (document.getElementById('descbg').classList.contains('on')) return;
+    var dx = e.changedTouches[0].clientX - sx;
+    var dy = e.changedTouches[0].clientY - sy;
+    var adx = Math.abs(dx), ady = Math.abs(dy);
+    if (adx > 35 && adx > ady * 1.2 && tot > 1) {
+      // Horizontal swipe — left = next, right = prev
+      nav(dx < 0 ? 1 : -1);
+    } else if (adx < 12 && ady < 12 && markerVisible) {
+      // Tap anywhere on the AR view — open details sheet
+      showDesc();
+    }
+  }, { passive: true });
+})();
 
 function render() {
   var c    = DATA[cur];
