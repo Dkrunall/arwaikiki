@@ -353,26 +353,28 @@ function buildScene() {
   // 3. Build card
   var hasVideo = !!DATA[cur].video_url;
   var card = [
-    // Card slab — a-box gives real physical depth; maroon sides visible at any angle
-    '<a-box width="1.68" height="2.58" depth="0.15" color="#510909" position="0 0 0"></a-box>',
-    // Video / image fills the entire card face
-    (hasVideo ? '<a-video' : '<a-image') + ' id="ar-img" src="#ci' + cur + '" position="0 0 0.077" width="1.60" height="2.50">',
+    // Card slab — taller box for bigger card
+    '<a-box width="1.68" height="3.00" depth="0.15" color="#510909" position="0 0 0"></a-box>',
+    // Video / image fills entire card face
+    (hasVideo ? '<a-video' : '<a-image') + ' id="ar-img" src="#ci' + cur + '" position="0 0 0.077" width="1.60" height="2.92">',
     (hasVideo ? '</a-video>' : '</a-image>'),
-    // Top overlay: dark strip + category pill
-    '<a-plane width="1.60" height="0.36" color="#000000" opacity="0.55" position="0 1.07 0.083"></a-plane>',
-    '<a-plane width="1.12" height="0.24" color="#510909" opacity="0.92" position="0 1.07 0.086"></a-plane>',
-    '<a-text id="ar-cat" value="…" position="0 1.07 0.090" align="center" color="#fcefd4" width="2.0" font="exo2bold"></a-text>',
-    // Bottom overlay: dark strip for name / ingredients / price
-    '<a-plane width="1.60" height="1.00" color="#000000" opacity="0.68" position="0 -0.75 0.083"></a-plane>',
+    // Top glass overlay: low-opacity tint + white edge line + category pill
+    '<a-plane width="1.60" height="0.45" color="#000000" opacity="0.22" position="0 1.275 0.082"></a-plane>',
+    '<a-plane width="1.60" height="0.005" color="#ffffff" opacity="0.28" position="0 1.053 0.083"></a-plane>',
+    '<a-plane width="1.12" height="0.26" color="#510909" opacity="0.70" position="0 1.275 0.086"></a-plane>',
+    '<a-text id="ar-cat" value="…" position="0 1.275 0.090" align="center" color="#fcefd4" width="2.0" font="exo2bold"></a-text>',
+    // Bottom glass overlay: low-opacity tint + white edge line
+    '<a-plane width="1.60" height="1.15" color="#000000" opacity="0.35" position="0 -0.925 0.082"></a-plane>',
+    '<a-plane width="1.60" height="0.005" color="#ffffff" opacity="0.22" position="0 -0.353 0.083"></a-plane>',
     // Cocktail name
-    '<a-text id="ar-name" value="…" position="0 -0.45 0.088" align="center" color="#fcefd4" width="2.0" font="exo2bold"></a-text>',
+    '<a-text id="ar-name" value="…" position="0 -0.52 0.088" align="center" color="#fcefd4" width="2.0" font="exo2bold"></a-text>',
     // Gold divider
-    '<a-plane width="1.35" height="0.004" color="#c29a53" position="0 -0.62 0.088"></a-plane>',
+    '<a-plane width="1.35" height="0.004" color="#c29a53" position="0 -0.70 0.088"></a-plane>',
     // Ingredients
-    '<a-text id="ar-ings" value="…" position="0 -0.76 0.088" align="center" color="#c8b89a" width="1.8"></a-text>',
+    '<a-text id="ar-ings" value="…" position="0 -0.86 0.088" align="center" color="#c8b89a" width="1.8"></a-text>',
     // Gold price pill
-    '<a-plane width="0.88" height="0.28" color="#c29a53" opacity="0.95" position="0 -0.98 0.088"></a-plane>',
-    '<a-text id="ar-price" value="…" position="0 -0.98 0.092" align="center" color="#1a0510" width="1.6" font="exo2bold"></a-text>',
+    '<a-plane width="0.88" height="0.28" color="#c29a53" opacity="0.92" position="0 -1.10 0.088"></a-plane>',
+    '<a-text id="ar-price" value="…" position="0 -1.10 0.092" align="center" color="#1a0510" width="1.6" font="exo2bold"></a-text>',
   ].join('\n');
 
   // 4. Full scene HTML
