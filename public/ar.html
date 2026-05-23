@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<!--
+  Waikiki AR Cocktail Menu
+  Stack: A-Frame 1.6.0 + AR.js master (per official docs)
+  Data:  fetched from /api/ar-data?slug=<slug>
+  Usage: /ar.html?slug=blue-lagoon
+-->
+<script src="https://cdn.jsdelivr.net/gh/aframevr/aframe@1.6.0/dist/aframe-master.min.js"></script>
+<script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* AR.js needs this on body */
+  body { margin: 0; overflow: hidden; background: #000;
+    font-family: 'Helvetica Neue', Arial, sans-serif; }
+
+  /* ── Loading ─────────────────────────────────────────── */
+  #loading {
+    position: fixed; inset: 0; z-index: 9999;
+    background: #060212;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    transition: opacity .6s;
+  }
+  #loading.gone { opacity: 0; pointer-events: none; }
+  .ring {
+    width: 72px; height: 72px; border-radius: 50%; margin-bottom: 24px;
+    border: 3px solid rgba(194,154,83,.15); border-top: 3px solid #c29a53;
+    animation: spin .9s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .ld-title { font-size: 22px; font-weight: 900; letter-spacing: .25em;
+    text-transform: uppercase; color: #c29a53; margin-bottom: 6px; }
+  .ld-sub   { font-size: 10px; font-weight: 700; letter-spacing: .2em;
+    text-transform: uppercase; color: rgba(255,255,255,.4); }
+
+  /* ── HUD (sits above A-Frame canvas) ────────────────── */
+  #hud {
+    position: fixed; inset: 0; z-index: 100;
+    display: none; flex-direction: column; pointer-events: none;
+  }
+
+  /* Top bar */
+  #topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px; padding-top: max(16px, env(safe-area-inset-top));
+    background: linear-gradient(180deg, rgba(0,0,0,.7), transparent);
+    pointer-events: auto;
+  }
+  .tbtn {
+    width: 42px; height: 42px; border-radius: 50%;
+    background: rgba(255,255,255,.1); backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,.2); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    text-decoration: none; font-size: 18px; cursor: pointer;
+  }
+  #brand {
+    font-size: 13px; font-weight: 900; text-transform: uppercase;
+    letter-spacing: .2em; color: #fff; text-shadow: 0 2px 16px rgba(0,0,0,.9);
+  }
+  #camst {
+    font-size: 11px; font-weight: 700; color: rgba(255,255,255,.8);
+    background: rgba(0,0,0,.45); backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 6px 14px; border-radius: 20px;
+    border: 1px solid rgba(255,255,255,.14);
+    transition: all .3s;
+  }
+  #camst.locked {
+    color: #c29a53; border-color: rgba(194,154,83,.45);
+    background: rgba(194,154,83,.08);
+  }
+
+  /* Scan target box */
+  #scanarea {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 16px;
+    transition: opacity .45s;
+  }
+  #scanarea.hide { opacity: 0; }
+  #scanbox {
+    width: 210px; height: 210px; position: relative;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .cor { position: absolute; width: 26px; height: 26px; }
+  .cor.tl { top: 0; left: 0;     border-top: 3px solid #c29a53; border-left:  3px solid #c29a53; border-radius: 9px 0 0 0; }
+  .cor.tr { top: 0; right: 0;    border-top: 3px solid #c29a53; border-right: 3px solid #c29a53; border-radius: 0 9px 0 0; }
+  .cor.bl { bottom: 0; left: 0;  border-bottom: 3px solid #c29a53; border-left:  3px solid #c29a53; border-radius: 0 0 0 9px; }
+  .cor.br { bottom: 0; right: 0; border-bottom: 3px solid #c29a53; border-right: 3px solid #c29a53; border-radius: 0 0 9px 0; }
+  #sline {
+    position: absolute; inset-x: 8px; height: 2px; top: 0;
+    background: linear-gradient(90deg, transparent, #c29a53, transparent);
+    animation: scan 2.5s linear infinite;
+    box-shadow: 0 0 10px 1px rgba(194,154,83,.5);
+  }
+  @keyframes scan {
+    0%   { top: 0;    opacity: .1; }
+    8%   { opacity: 1; }
+    92%  { opacity: 1; }
+    100% { top: 100%; opacity: .1; }
+  }
+  #scanlbl { font-size: 11px; font-weight: 900; text-transform: uppercase;
+    letter-spacing: .18em; color: rgba(255,255,255,.65); text-align: center; }
+  #scansub { font-size: 9px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .12em; color: rgba(194,154,83,.6); text-align: center; margin-top: 4px; }
+
+  /* Tips panel (shown after 9s) */
+  #tips {
+    display: none; margin-top: 16px;
+    background: rgba(0,0,0,.6); backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(194,154,83,.3); border-radius: 14px;
+    padding: 14px 18px; max-width: 260px;
+  }
+  #tips h4 { font-size: 10px; font-weight: 900; text-transform: uppercase;
+    letter-spacing: .15em; color: #c29a53; margin-bottom: 8px; }
+  #tips p  { font-size: 11px; color: rgba(255,255,255,.75); line-height: 1.9; }
+
+  /* Bottom nav */
+  #botbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px; padding-bottom: max(20px, env(safe-area-inset-bottom));
+    background: linear-gradient(0deg, rgba(0,0,0,.75), transparent);
+    pointer-events: auto;
+  }
+  .navbtn {
+    width: 46px; height: 46px; border-radius: 50%;
+    background: rgba(255,255,255,.1); backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,.2); color: #fff;
+    font-size: 20px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .15s, transform .1s;
+    -webkit-tap-highlight-color: transparent; user-select: none;
+  }
+  .navbtn:active { background: rgba(194,154,83,.25); transform: scale(.92); }
+  #cinfo { text-align: center; flex: 1; padding: 0 12px; }
+  #ciname { font-size: 16px; font-weight: 900; text-transform: uppercase;
+    letter-spacing: .08em; color: #fff; line-height: 1.2; }
+  #cisub  { font-size: 10px; font-weight: 700; letter-spacing: .15em;
+    text-transform: uppercase; color: rgba(194,154,83,.9); margin-top: 3px; }
+  #cicnt  { font-size: 10px; color: rgba(255,255,255,.4); margin-top: 3px; }
+</style>
+
+<body style="margin:0;overflow:hidden">
+
+<!-- ── Loading screen ───────────────────────────────────── -->
+<div id="loading">
+  <div class="ring"></div>
+  <div class="ld-title">🍹 Waikiki</div>
+  <div class="ld-sub" id="ld-msg">Loading menu…</div>
+</div>
+
+<!-- ── HUD (shown after data + scene ready) ─────────────── -->
+<div id="hud">
+  <div id="topbar">
+    <a class="tbtn" href="/" id="back-btn">&#8592;</a>
+    <span id="brand">🍹 Waikiki</span>
+    <span id="camst">&#9679; SCANNING</span>
+  </div>
+
+  <div id="scanarea">
+    <div id="scanbox">
+      <div class="cor tl"></div>
+      <div class="cor tr"></div>
+      <div class="cor bl"></div>
+      <div class="cor br"></div>
+      <div id="sline"></div>
+    </div>
+    <div id="scanlbl">Point at Hiro Coaster</div>
+    <div id="scansub">Hold 20 – 40 cm above &bull; Keep steady</div>
+    <div id="tips">
+      <h4>Having trouble?</h4>
+      <p>
+        &#8226; Bright, even lighting<br>
+        &#8226; Hold 20–40 cm above marker<br>
+        &#8226; Keep phone still 2–3 sec<br>
+        &#8226; Marker must be flat &amp; unfolded<br>
+        &#8226; Full white border must be visible
+      </p>
+    </div>
+  </div>
+
+  <div id="botbar">
+    <button class="navbtn" id="btn-prev" onclick="nav(-1)">&#8592;</button>
+    <div id="cinfo">
+      <div id="ciname"></div>
+      <div id="cisub"></div>
+      <div id="cicnt"></div>
+    </div>
+    <button class="navbtn" id="btn-next" onclick="nav(1)">&#8594;</button>
+  </div>
+</div>
+
+<script>
+// ── State ────────────────────────────────────────────────────────
+var DATA = [], cur = 0, tot = 0;
+var slug = new URLSearchParams(location.search).get('slug') || 'test';
+var tipsTimer = null;
+
+// ── Helpers ──────────────────────────────────────────────────────
+function ea(s) {   // escape attribute value
+  return String(s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+}
+
+// ── Boot: fetch cocktail data from API ───────────────────────────
+document.getElementById('ld-msg').textContent = 'Loading menu…';
+
+fetch('/api/ar-data?slug=' + encodeURIComponent(slug))
+  .then(function(r) { return r.json(); })
+  .then(function(res) {
+    DATA = res.cocktails;
+    cur  = res.startIndex;
+    tot  = DATA.length;
+    if (!tot) { location.href = '/'; return; }
+    document.getElementById('ld-msg').textContent = 'Starting AR Camera…';
+    buildScene();
+  })
+  .catch(function() {
+    document.getElementById('ld-msg').textContent = 'Failed to load menu. Reload page.';
+  });
+
+// ── Build A-Frame scene (called after data loads) ─────────────────
+function buildScene() {
+
+  // 1. Register event component BEFORE a-scene is appended (per official AR.js docs)
+  AFRAME.registerComponent('waikiki-events', {
+    init: function () {
+      var marker = this.el;
+      marker.addEventListener('markerFound', onMarkerFound);
+      marker.addEventListener('markerLost',  onMarkerLost);
+    }
+  });
+
+  // 2. Build <a-assets> — preload all cocktail images with crossorigin
+  var assets = DATA.map(function(c, i) {
+    return '<img id="ci' + i + '" src="' + ea(c.image_url) + '" crossorigin="anonymous"/>';
+  }).join('');
+
+  // 3. Build glassmorphism card (initial values filled by render() below)
+  var card = [
+    // Glow layers
+    '<a-plane width="2.3"  height="3.3"  color="#c29a53" opacity="0.16" position="0 0 -0.04" material="transparent:true;depthWrite:false"></a-plane>',
+    '<a-plane width="2.08" height="3.08" color="#c29a53" opacity="0.5"  position="0 0 -0.01" material="transparent:true"></a-plane>',
+    // Dark glass body
+    '<a-plane width="2.0"  height="3.0"  color="#080614" opacity="0.92" position="0 0 0"    material="transparent:true"></a-plane>',
+    // Gold accent bars
+    '<a-plane width="2.0"  height="0.06" color="#c29a53" position="0  1.47 0.01"></a-plane>',
+    '<a-plane width="2.0"  height="0.06" color="#c29a53" position="0 -1.47 0.01"></a-plane>',
+    // Category badge
+    '<a-plane width="1.2" height="0.24" color="#c29a53" opacity="0.2" position="0 1.18 0.01" material="transparent:true"></a-plane>',
+    '<a-text id="ar-cat"   value="…" position="0 1.18 0.02" align="center" color="#c29a53" width="2.8" font="sourcecodepro"></a-text>',
+    // Image — bob + tilt animations
+    '<a-image id="ar-img" src="#ci0" position="0 0.38 0.05" width="1.65" height="1.65"',
+    '  animation__bob="property:position; from:0 0.38 0.05; to:0 0.53 0.05; dir:alternate; loop:true; dur:2100; easing:easeInOutSine"',
+    '  animation__tilt="property:rotation; from:0 -5 0; to:0 5 0; dir:alternate; loop:true; dur:3400; easing:easeInOutSine">',
+    '</a-image>',
+    // Name
+    '<a-text id="ar-name" value="…" position="0 -0.64 0.02" align="center" color="#ffffff" width="5.2" font="exo2bold"></a-text>',
+    // Divider
+    '<a-plane width="1.75" height="0.011" color="#c29a53" opacity="0.5" position="0 -0.87 0.01" material="transparent:true"></a-plane>',
+    // Ingredients
+    '<a-text id="ar-ings" value="…" position="0 -1.06 0.02" align="center" color="#7aadcc" width="3.2"></a-text>',
+    // Price panel + accents
+    '<a-plane width="2.0"  height="0.52" color="#c29a53" opacity="0.1" position="0 -1.33 0.01" material="transparent:true"></a-plane>',
+    '<a-plane width="0.035" height="0.3" color="#c29a53" opacity="0.7" position="-0.7 -1.33 0.015"></a-plane>',
+    '<a-plane width="0.035" height="0.3" color="#c29a53" opacity="0.7" position=" 0.7 -1.33 0.015"></a-plane>',
+    '<a-text id="ar-price" value="…" position="0 -1.33 0.02" align="center" color="#c29a53" width="5.5" font="exo2bold"></a-text>',
+  ].join('\n');
+
+  // 4. Full scene HTML — minimal setup matching official AR.js examples
+  var sceneHTML =
+    '<a-scene embedded arjs="sourceType: webcam;" renderer="precision: medium;">' +
+      '<a-assets timeout="8000">' + assets + '</a-assets>' +
+      '<a-marker preset="hiro" id="marker" waikiki-events' +
+        ' smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">' +
+        '<a-entity rotation="-70 0 0">' + card + '</a-entity>' +
+      '</a-marker>' +
+      '<a-entity camera></a-entity>' +
+    '</a-scene>';
+
+  // 5. Inject scene into DOM
+  var wrap = document.createElement('div');
+  wrap.innerHTML = sceneHTML;
+  document.body.appendChild(wrap);
+
+  // 6. Wait for A-Frame scene loaded event, then show HUD
+  document.querySelector('a-scene').addEventListener('loaded', function () {
+    var ld = document.getElementById('loading');
+    ld.classList.add('gone');
+    setTimeout(function () { ld.style.display = 'none'; }, 700);
+    document.getElementById('hud').style.display = 'flex';
+    render(); // fill in first cocktail data
+  });
+
+  // 7. Auto-show tips after 9s if no marker found yet
+  tipsTimer = setTimeout(function () {
+    document.getElementById('tips').style.display = 'block';
+  }, 9000);
+}
+
+// ── Marker events ────────────────────────────────────────────────
+function onMarkerFound() {
+  clearTimeout(tipsTimer);
+  document.getElementById('tips').style.display = 'none';
+  document.getElementById('scanarea').classList.add('hide');
+  var cs = document.getElementById('camst');
+  cs.textContent = '✓ LOCKED';
+  cs.classList.add('locked');
+}
+
+function onMarkerLost() {
+  document.getElementById('scanarea').classList.remove('hide');
+  var cs = document.getElementById('camst');
+  cs.textContent = '● SCANNING';
+  cs.classList.remove('locked');
+}
+
+// ── Navigation ───────────────────────────────────────────────────
+function nav(dir) {
+  cur = ((cur + dir) % tot + tot) % tot;
+  render();
+}
+
+// ── Render: push current cocktail data into A-Frame + HUD ────────
+function render() {
+  var c    = DATA[cur];
+  var ings = c.ingredients.slice(0, 4).join(' · ');
+
+  // Update A-Frame card via setAttribute (the A-Frame way)
+  var img   = document.getElementById('ar-img');
+  var cat   = document.getElementById('ar-cat');
+  var name  = document.getElementById('ar-name');
+  var ingEl = document.getElementById('ar-ings');
+  var price = document.getElementById('ar-price');
+
+  if (img)   img.setAttribute('src', '#ci' + cur);
+  if (cat)   cat.setAttribute('value', c.category.toUpperCase());
+  if (name)  name.setAttribute('value', c.name.toUpperCase());
+  if (ingEl) ingEl.setAttribute('value', ings);
+  if (price) price.setAttribute('value', 'Rs. ' + c.price);
+
+  // Update HUD bottom bar
+  document.getElementById('ciname').textContent = c.name;
+  document.getElementById('cisub').textContent  = c.category + ' · Rs. ' + c.price;
+  document.getElementById('cicnt').textContent  = (cur + 1) + ' / ' + tot;
+
+  // Hide nav buttons if only one cocktail
+  var btnPrev = document.getElementById('btn-prev');
+  var btnNext = document.getElementById('btn-next');
+  if (btnPrev) btnPrev.style.opacity = tot > 1 ? '1' : '0.25';
+  if (btnNext) btnNext.style.opacity = tot > 1 ? '1' : '0.25';
+}
+</script>
+
+</body>
+</html>
