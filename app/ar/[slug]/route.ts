@@ -138,7 +138,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;
 #scanarea{flex:1;display:flex;flex-direction:column;
   align-items:center;justify-content:center;gap:16px;
   transition:opacity .45s}
-#scanarea.hide{opacity:0}
+#scanarea.hide{opacity:0;visibility:hidden}
 #scanbox{width:210px;height:210px;position:relative;
   display:flex;align-items:center;justify-content:center}
 .cor{position:absolute;width:26px;height:26px}
@@ -231,39 +231,28 @@ AFRAME.registerComponent('waikiki-events', {
             smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
     <a-entity rotation="-70 0 0">
 
-      <!-- ── Glassmorphism card layers ─────────────────── -->
-      <!-- Outer ambient glow -->
-      <a-plane width="2.55" height="3.55" color="#c29a53" opacity="0.06"
-               position="0 0 -0.08" material="transparent: true; depthWrite: false;"></a-plane>
-      <!-- Mid glow -->
-      <a-plane width="2.3"  height="3.3"  color="#c29a53" opacity="0.16"
-               position="0 0 -0.04" material="transparent: true; depthWrite: false;"></a-plane>
-      <!-- Sharp border -->
-      <a-plane width="2.08" height="3.08" color="#c29a53" opacity="0.5"
-               position="0 0 -0.01" material="transparent: true;"></a-plane>
-      <!-- Main card body (dark glass) -->
-      <a-plane width="2.0"  height="3.0"  color="#080614" opacity="0.92"
+      <!-- Single gold border — no stacked planes = no z-fighting pixels -->
+      <a-plane width="2.08" height="3.08" color="#c29a53" position="0 0 -0.01"></a-plane>
+      <!-- Dark glass card body -->
+      <a-plane width="2.0" height="3.0" color="#080614" opacity="0.93"
                position="0 0 0" material="transparent: true;"></a-plane>
-      <!-- Subtle inner highlight (top 40%) -->
-      <a-plane width="2.0"  height="1.2"  color="#ffffff" opacity="0.025"
-               position="0 0.9 0.002" material="transparent: true; depthWrite: false;"></a-plane>
 
-      <!-- Gold accent bars top/bottom -->
+      <!-- Gold accent bars top / bottom -->
       <a-plane width="2.0" height="0.06" color="#c29a53" position="0  1.47 0.01"></a-plane>
       <a-plane width="2.0" height="0.06" color="#c29a53" position="0 -1.47 0.01"></a-plane>
 
       <!-- Category badge -->
-      <a-plane id="cat-bg" width="1.2" height="0.24" color="#c29a53" opacity="0.2"
+      <a-plane width="1.2" height="0.24" color="#c29a53" opacity="0.25"
                position="0 1.18 0.01" material="transparent: true;"></a-plane>
-      <a-text  id="ar-cat" value="${esc(f.category.toUpperCase())}"
-               position="0 1.18 0.02" align="center" color="#c29a53" width="2.8"
-               font="sourcecodepro"></a-text>
+      <a-text id="ar-cat" value="${esc(f.category.toUpperCase())}"
+              position="0 1.18 0.02" align="center" color="#c29a53" width="2.8"
+              font="sourcecodepro"></a-text>
 
-      <!-- Cocktail image — bob up/down + gentle tilt -->
+      <!-- Cocktail image — bob + tilt animations -->
       <a-image id="ar-img" src="#ci${startIndex}"
                position="0 0.38 0.05" width="1.65" height="1.65"
-               animation__bob="property: position; from: 0 0.38 0.05; to: 0 0.53 0.05;
-                 dir: alternate; loop: true; dur: 2100; easing: easeInOutSine"
+               animation__bob="property: position; from: 0 0.38 0.05; to: 0 0.52 0.05;
+                 dir: alternate; loop: true; dur: 2200; easing: easeInOutSine"
                animation__tilt="property: rotation; from: 0 -5 0; to: 0 5 0;
                  dir: alternate; loop: true; dur: 3400; easing: easeInOutSine">
       </a-image>
@@ -273,23 +262,16 @@ AFRAME.registerComponent('waikiki-events', {
               position="0 -0.64 0.02" align="center" color="#ffffff"
               width="5.2" font="exo2bold"></a-text>
 
-      <!-- Gold divider line -->
-      <a-plane width="1.75" height="0.011" color="#c29a53" opacity="0.5"
-               position="0 -0.87 0.01" material="transparent: true;"></a-plane>
+      <!-- Divider -->
+      <a-plane width="1.75" height="0.012" color="#c29a53" position="0 -0.87 0.01"></a-plane>
 
       <!-- Ingredients -->
       <a-text id="ar-ings" value="${esc(fIngs)}"
               position="0 -1.06 0.02" align="center" color="#7aadcc" width="3.2"></a-text>
 
-      <!-- Price panel -->
-      <a-plane id="price-bg" width="2.0" height="0.52" color="#c29a53" opacity="0.1"
+      <!-- Price -->
+      <a-plane width="2.0" height="0.52" color="#c29a53" opacity="0.15"
                position="0 -1.33 0.01" material="transparent: true;"></a-plane>
-      <!-- Price left line accent -->
-      <a-plane width="0.035" height="0.3" color="#c29a53" opacity="0.7"
-               position="-0.7 -1.33 0.015"></a-plane>
-      <!-- Price right line accent -->
-      <a-plane width="0.035" height="0.3" color="#c29a53" opacity="0.7"
-               position="0.7 -1.33 0.015"></a-plane>
       <a-text id="ar-price" value="Rs. ${f.price}"
               position="0 -1.33 0.02" align="center" color="#c29a53"
               width="5.5" font="exo2bold"></a-text>

@@ -278,10 +278,10 @@ function buildScene() {
       '<a-entity camera></a-entity>' +
     '</a-scene>';
 
-  // 5. Inject scene into DOM
-  var wrap = document.createElement('div');
-  wrap.innerHTML = sceneHTML;
-  document.body.appendChild(wrap);
+  // 5. Inject a-scene directly into body (A-Frame requires it to be a direct body child)
+  var tmp = document.createElement('div');
+  tmp.innerHTML = sceneHTML;
+  document.body.appendChild(tmp.querySelector('a-scene'));
 
   // 6. Wait for A-Frame scene loaded event, then show HUD
   document.querySelector('a-scene').addEventListener('loaded', function () {
