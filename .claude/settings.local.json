@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:ar-js-org.github.io)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:aframe.io)"
+    ]
+  }
+}
