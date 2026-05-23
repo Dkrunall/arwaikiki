@@ -20,7 +20,7 @@ const MOCK: Cocktail[] = [
     description: 'A stunning sunset-inspired blend of tequila, orange juice, and grenadine.',
     ingredients: ['Tequila', 'Orange Juice', 'Grenadine', 'Lime'],
     price: 750, image_url: 'https://picsum.photos/seed/waikiki/400/400',
-    card_color: '#7a1a0a', is_active: true,
+    video_url: '/videos/c2.mp4', card_color: '#7a1a0a', is_active: true,
   },
 ];
 
@@ -254,16 +254,20 @@ ${tot <= 1 ? '.navbtn{opacity:.25;pointer-events:none}' : ''}
 
 <!-- Register marker event component BEFORE a-scene is parsed (official AR.js pattern) -->
 <script>
+var markerVisible = false;
+var navBusy = false;
+
 AFRAME.registerComponent('waikiki-events', {
   init: function() {
     var marker   = this.el;
-    var card     = marker.querySelector('[rotation]'); // the -70deg entity
+    var card     = document.getElementById('ar-card');
     var scanarea = document.getElementById('scanarea');
     var camst    = document.getElementById('camst');
     var tips     = document.getElementById('tips');
     var tipsTimer = setTimeout(function(){ if(tips) tips.style.display='block'; }, 9000);
 
     marker.addEventListener('markerFound', function() {
+      markerVisible = true;
       clearTimeout(tipsTimer);
       if(tips)    tips.style.display = 'none';
       if(scanarea) scanarea.classList.add('hide');
@@ -278,6 +282,7 @@ AFRAME.registerComponent('waikiki-events', {
     });
 
     marker.addEventListener('markerLost', function() {
+      markerVisible = false;
       if(scanarea) scanarea.classList.remove('hide');
       if(camst)  { camst.textContent = '● SCANNING'; camst.classList.remove('locked'); }
       if(card) card.setAttribute('animation__popout',
@@ -334,13 +339,7 @@ window.addEventListener('camera-error', function() {
 
   <a-marker preset="hiro" id="marker" waikiki-events
             smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
-    <a-entity rotation="-70 0 0" scale="0 0 0">
-
-      <!-- Pulsing gold halo — larger plane behind box, peeks out as glowing frame -->
-      <a-plane width="1.86" height="2.66" color="#c29a53" position="0 0 -0.10"
-               animation__glow="property: opacity; from: 0.18; to: 0.70;
-                 dir: alternate; loop: true; dur: 1800; easing: easeInOutSine">
-      </a-plane>
+    <a-entity id="ar-card" rotation="-70 0 0" scale="0 0 0">
 
       <!-- Card slab — a-box gives real physical depth; maroon sides visible at any angle -->
       <a-box width="1.68" height="2.58" depth="0.15" color="#510909" position="0 0 0"></a-box>
@@ -498,11 +497,31 @@ function closeDesc() {
   document.getElementById('descbg').classList.remove('on');
 }
 
-// Navigate between cocktails (prev / next)
+// Navigate between cocktails with bounce animation
 function nav(dir) {
-  cur = ((cur + dir) % tot + tot) % tot;
+  if (navBusy) return;
   closeDesc();
-  render();
+  var card = document.getElementById('ar-card');
+
+  if (!markerVisible || !card) {
+    cur = ((cur + dir) % tot + tot) % tot;
+    render();
+    return;
+  }
+
+  navBusy = true;
+  // Bounce out
+  card.setAttribute('animation__navout',
+    'property:scale; from:1 1 1; to:0 0 0; dur:200; easing:easeInBack');
+
+  setTimeout(function() {
+    cur = ((cur + dir) % tot + tot) % tot;
+    render();
+    // Bounce in with overshoot
+    card.setAttribute('animation__navin',
+      'property:scale; from:0 0 0; to:1 1 1; dur:420; easing:easeOutBack');
+    setTimeout(function() { navBusy = false; }, 440);
+  }, 210);
 }
 
 function render() {

@@ -262,6 +262,8 @@
 var DATA = [], cur = 0, tot = 0;
 var slug = new URLSearchParams(location.search).get('slug') || 'test';
 var tipsTimer = null;
+var markerVisible = false;
+var navBusy = false;
 
 // ── Helpers ──────────────────────────────────────────────────────
 function ea(s) {   // escape attribute value
@@ -350,10 +352,6 @@ function buildScene() {
 
   // 3. Build card
   var card = [
-    // Pulsing gold halo — larger plane behind box, peeks out as glowing frame
-    '<a-plane width="1.86" height="2.66" color="#c29a53" position="0 0 -0.10"',
-    '  animation__glow="property:opacity; from:0.18; to:0.70; dir:alternate; loop:true; dur:1800; easing:easeInOutSine">',
-    '</a-plane>',
     // Card slab — a-box gives real physical depth; maroon sides visible at any angle
     '<a-box width="1.68" height="2.58" depth="0.15" color="#510909" position="0 0 0"></a-box>',
     // Dark face panel — same size as box, fully covers its front face
@@ -388,7 +386,7 @@ function buildScene() {
       '<a-assets timeout="30000">' + assets + '</a-assets>' +
       '<a-marker preset="hiro" id="marker" waikiki-events' +
         ' smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">' +
-        '<a-entity rotation="-70 0 0" scale="0 0 0">' + card + '</a-entity>' +
+        '<a-entity id="ar-card" rotation="-70 0 0" scale="0 0 0">' + card + '</a-entity>' +
       '</a-marker>' +
       '<a-entity camera></a-entity>' +
     '</a-scene>';
@@ -440,6 +438,7 @@ function closeDesc() {
 
 // ── Marker events ────────────────────────────────────────────────
 function onMarkerFound() {
+  markerVisible = true;
   clearTimeout(tipsTimer);
   document.getElementById('tips').style.display = 'none';
   document.getElementById('scanarea').classList.add('hide');
@@ -453,6 +452,7 @@ function onMarkerFound() {
 }
 
 function onMarkerLost() {
+  markerVisible = false;
   document.getElementById('scanarea').classList.remove('hide');
   var cs = document.getElementById('camst');
   cs.textContent = '● SCANNING'; cs.classList.remove('locked');
@@ -461,11 +461,31 @@ function onMarkerLost() {
   closeDesc();
 }
 
-// ── Navigation ───────────────────────────────────────────────────
+// ── Navigation with bounce animation ─────────────────────────────
 function nav(dir) {
-  cur = ((cur + dir) % tot + tot) % tot;
+  if (navBusy) return;
   closeDesc();
-  render();
+  var card = document.getElementById('ar-card');
+
+  if (!markerVisible || !card) {
+    cur = ((cur + dir) % tot + tot) % tot;
+    render();
+    return;
+  }
+
+  navBusy = true;
+  // Bounce out
+  card.setAttribute('animation__navout',
+    'property:scale; from:1 1 1; to:0 0 0; dur:200; easing:easeInBack');
+
+  setTimeout(function() {
+    cur = ((cur + dir) % tot + tot) % tot;
+    render();
+    // Bounce in with overshoot
+    card.setAttribute('animation__navin',
+      'property:scale; from:0 0 0; to:1 1 1; dur:420; easing:easeOutBack');
+    setTimeout(function() { navBusy = false; }, 440);
+  }, 210);
 }
 
 // ── Render: push current cocktail data into A-Frame + HUD ────────
