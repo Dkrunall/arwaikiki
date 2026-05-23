@@ -222,7 +222,7 @@ AFRAME.registerComponent('waikiki-events', {
 </script>
 
 <!-- Minimal a-scene exactly matching official AR.js examples -->
-<a-scene embedded arjs='sourceType: webcam; videoTexture: true; debugUIEnabled: false;' renderer='precision: medium; alpha: true;'>
+<a-scene embedded arjs='sourceType: webcam; debugUIEnabled: false;' renderer='precision: medium; alpha: true;'>
   <a-assets timeout="8000">
     ${assetTags}
   </a-assets>
