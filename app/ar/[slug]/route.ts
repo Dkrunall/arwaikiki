@@ -349,14 +349,14 @@ window.addEventListener('camera-error', function() {
               position="0 0.95 0.115" align="center" color="#fcefd4"
               width="2.0" font="exo2bold"></a-text>
 
-      <!-- Cocktail media — portrait 9:16 video or square image, floats above card face -->
-      <a-image id="ar-img" src="#ci${startIndex}"
+      <!-- Cocktail media — a-video for video assets, a-image for images -->
+      <${f.video_url ? 'a-video' : 'a-image'} id="ar-img" src="#ci${startIndex}"
                position="0 0.27 0.16" width="0.75" height="1.33"
                animation__bob="property: position; from: 0 0.27 0.16; to: 0 0.38 0.16;
                  dir: alternate; loop: true; dur: 2200; easing: easeInOutSine"
                animation__tilt="property: rotation; from: 0 -5 0; to: 0 5 0;
                  dir: alternate; loop: true; dur: 3400; easing: easeInOutSine">
-      </a-image>
+      </${f.video_url ? 'a-video' : 'a-image'}>
 
       <!-- Gold divider -->
       <a-plane width="1.45" height="0.005" color="#c29a53" position="0 -0.40 0.090"></a-plane>
@@ -509,7 +509,7 @@ function render() {
   document.getElementById('ar-img').setAttribute('src', '#ci' + cur);
   // Ensure video plays when navigating to a cocktail that has one
   var asset = document.getElementById('ci' + cur);
-  if (asset && asset.tagName === 'VIDEO') asset.play().catch(function(){});
+  if (asset && asset.tagName === 'VIDEO') { asset.currentTime = 0; asset.play().catch(function(){}); }
   document.getElementById('ar-cat').setAttribute('value', c.category.toUpperCase());
   document.getElementById('ar-name').setAttribute('value', c.name.toUpperCase());
   document.getElementById('ar-ings').setAttribute('value', ings);

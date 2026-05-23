@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 interface Cocktail {
   id: string; name: string; slug: string; category: string;
   description: string; ingredients: string[] | string;
-  price: number; image_url: string; card_color: string; is_active: boolean;
+  price: number; image_url: string; video_url?: string; card_color: string; is_active: boolean;
 }
 
 const MOCK: Cocktail[] = [
@@ -13,7 +13,7 @@ const MOCK: Cocktail[] = [
     description: 'A vibrant blue tropical cocktail with vodka, blue curaçao, and fresh lemonade.',
     ingredients: ['Vodka', 'Blue Curaçao', 'Lemonade', 'Lemon'],
     price: 650, image_url: 'https://picsum.photos/seed/bluelagoon/400/400',
-    card_color: '#0a4a7a', is_active: true,
+    video_url: '/videos/c1.mp4', card_color: '#0a4a7a', is_active: true,
   },
   {
     id: 'mock2', name: 'Waikiki Sunset', slug: 'test2', category: 'Tropical',
@@ -54,6 +54,7 @@ export async function GET(request: NextRequest) {
       : String(c.ingredients).split(',').map(s => s.trim()),
     price:     c.price,
     image_url: c.image_url || '',
+    video_url: c.video_url || '',
     card_color: c.card_color || '#0c0918',
   }));
 
