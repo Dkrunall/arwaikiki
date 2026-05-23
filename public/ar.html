@@ -234,44 +234,37 @@ function buildScene() {
     }
   });
 
-  // 2. Build <a-assets> — preload all cocktail images with crossorigin
+  // 2. Build <a-assets> — preload all images with crossorigin so WebGL can use them
   var assets = DATA.map(function(c, i) {
     return '<img id="ci' + i + '" src="' + ea(c.image_url) + '" crossorigin="anonymous"/>';
   }).join('');
 
-  // 3. Build card — single border plane (no overlapping glows = no z-fighting pixels)
-  var firstImg = ea(DATA[cur].image_url);
+  // 3. Build card
   var card = [
-    // Gold border — 0.1 behind body so depth buffer never confuses them
-    '<a-plane width="2.08" height="3.08" color="#c29a53" position="0 0 -0.1"></a-plane>',
-    // Card body — fully opaque (no transparency artifacts or marker bleedthrough)
-    '<a-plane width="2.0" height="3.0" color="#080614" position="0 0 0"></a-plane>',
-    // Gold accent bars — 0.1 above body
-    '<a-plane width="2.0" height="0.06" color="#c29a53" position="0  1.47 0.1"></a-plane>',
-    '<a-plane width="2.0" height="0.06" color="#c29a53" position="0 -1.47 0.1"></a-plane>',
-    // Category badge
-    '<a-plane width="1.2" height="0.24" color="#1a0a2e" position="0 1.18 0.1"></a-plane>',
-    '<a-text id="ar-cat" value="…" position="0 1.18 0.15" align="center" color="#c29a53" width="2.8" font="sourcecodepro"></a-text>',
-    // Cocktail image — direct URL (no asset reference avoids CORS/timing issues)
-    '<a-image id="ar-img" src="' + firstImg + '" position="0 0.38 0.15" width="1.65" height="1.65"',
-    '  animation__bob="property:position; from:0 0.38 0.15; to:0 0.52 0.15; dir:alternate; loop:true; dur:2200; easing:easeInOutSine"',
+    // Gold border z=0, body z=0.03 — body masks center, only gold edges visible
+    '<a-plane width="2.08" height="3.08" color="#c29a53" position="0 0 0"></a-plane>',
+    '<a-plane width="2.0"  height="3.0"  color="#080614" position="0 0 0.03"></a-plane>',
+    // Accent bars and content at z=0.05–0.07 — clear of both base planes
+    '<a-plane width="2.0" height="0.06" color="#c29a53" position="0  1.47 0.05"></a-plane>',
+    '<a-plane width="2.0" height="0.06" color="#c29a53" position="0 -1.47 0.05"></a-plane>',
+    '<a-plane width="1.2" height="0.24" color="#1a0a2e" position="0 1.18 0.05"></a-plane>',
+    '<a-text id="ar-cat" value="…" position="0 1.18 0.06" align="center" color="#c29a53" width="2.8" font="sourcecodepro"></a-text>',
+    // Asset reference — A-Frame waits for assets to load before scene fires, so #ci0 is ready
+    '<a-image id="ar-img" src="#ci' + cur + '" position="0 0.38 0.07" width="1.65" height="1.65"',
+    '  animation__bob="property:position; from:0 0.38 0.07; to:0 0.50 0.07; dir:alternate; loop:true; dur:2200; easing:easeInOutSine"',
     '  animation__tilt="property:rotation; from:0 -5 0; to:0 5 0; dir:alternate; loop:true; dur:3400; easing:easeInOutSine">',
     '</a-image>',
-    // Name
-    '<a-text id="ar-name" value="…" position="0 -0.64 0.1" align="center" color="#ffffff" width="5.2" font="exo2bold"></a-text>',
-    // Divider line
-    '<a-plane width="1.75" height="0.012" color="#c29a53" position="0 -0.87 0.1"></a-plane>',
-    // Ingredients
-    '<a-text id="ar-ings" value="…" position="0 -1.06 0.1" align="center" color="#7aadcc" width="3.2"></a-text>',
-    // Price strip
-    '<a-plane width="2.0" height="0.52" color="#1a0a2e" position="0 -1.33 0.1"></a-plane>',
-    '<a-text id="ar-price" value="…" position="0 -1.33 0.15" align="center" color="#c29a53" width="5.5" font="exo2bold"></a-text>',
+    '<a-text id="ar-name" value="…" position="0 -0.64 0.05" align="center" color="#ffffff" width="5.2" font="exo2bold"></a-text>',
+    '<a-plane width="1.75" height="0.012" color="#c29a53" position="0 -0.87 0.05"></a-plane>',
+    '<a-text id="ar-ings" value="…" position="0 -1.06 0.05" align="center" color="#7aadcc" width="3.2"></a-text>',
+    '<a-plane width="2.0" height="0.52" color="#1a0a2e" position="0 -1.33 0.05"></a-plane>',
+    '<a-text id="ar-price" value="…" position="0 -1.33 0.06" align="center" color="#c29a53" width="5.5" font="exo2bold"></a-text>',
   ].join('\n');
 
-  // 4. Full scene HTML — minimal setup matching official AR.js examples
+  // 4. Full scene HTML
   var sceneHTML =
     '<a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" renderer="precision: medium; alpha: true;">' +
-      '<a-assets timeout="8000">' + assets + '</a-assets>' +
+      '<a-assets timeout="30000">' + assets + '</a-assets>' +
       '<a-marker preset="hiro" id="marker" waikiki-events' +
         ' smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">' +
         '<a-entity rotation="-70 0 0">' + card + '</a-entity>' +
@@ -336,7 +329,7 @@ function render() {
   var ingEl = document.getElementById('ar-ings');
   var price = document.getElementById('ar-price');
 
-  if (img)   img.setAttribute('src', c.image_url);
+  if (img)   img.setAttribute('src', '#ci' + cur);
   if (cat)   cat.setAttribute('value', c.category.toUpperCase());
   if (name)  name.setAttribute('value', c.name.toUpperCase());
   if (ingEl) ingEl.setAttribute('value', ings);

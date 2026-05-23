@@ -7,13 +7,22 @@ interface Cocktail {
   price: number; image_url: string; card_color: string; is_active: boolean;
 }
 
-const MOCK: Cocktail[] = [{
-  id: 'mock', name: 'Blue Lagoon', slug: 'test', category: 'Signature',
-  description: 'A vibrant blue tropical cocktail combining vodka, blue curaçao, and fresh lemonade.',
-  ingredients: ['Vodka', 'Blue Curaçao', 'Lemonade', 'Lemon'],
-  price: 650, image_url: 'https://www.thecocktaildb.com/images/media/drink/adxcbq1641146824.jpg',
-  card_color: '#0a4a7a', is_active: true,
-}];
+const MOCK: Cocktail[] = [
+  {
+    id: 'mock1', name: 'Blue Lagoon', slug: 'test', category: 'Signature',
+    description: 'A vibrant blue tropical cocktail with vodka, blue curaçao, and fresh lemonade.',
+    ingredients: ['Vodka', 'Blue Curaçao', 'Lemonade', 'Lemon'],
+    price: 650, image_url: 'https://picsum.photos/seed/bluelagoon/400/400',
+    card_color: '#0a4a7a', is_active: true,
+  },
+  {
+    id: 'mock2', name: 'Waikiki Sunset', slug: 'test2', category: 'Tropical',
+    description: 'A stunning sunset-inspired blend of tequila, orange juice, and grenadine.',
+    ingredients: ['Tequila', 'Orange Juice', 'Grenadine', 'Lime'],
+    price: 750, image_url: 'https://picsum.photos/seed/waikiki/400/400',
+    card_color: '#7a1a0a', is_active: true,
+  },
+];
 
 export async function GET(
   request: NextRequest,
@@ -231,46 +240,39 @@ AFRAME.registerComponent('waikiki-events', {
             smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
     <a-entity rotation="-70 0 0">
 
-      <!-- Gold border (well behind body — 0.1 gap prevents depth-buffer z-fight) -->
-      <a-plane width="2.08" height="3.08" color="#c29a53" position="0 0 -0.1"></a-plane>
-      <!-- Card body — fully opaque so camera/marker doesn't bleed through -->
-      <a-plane width="2.0" height="3.0" color="#080614" position="0 0 0"></a-plane>
+      <!-- Gold border at z=0, body at z=0.03 — body masks center, gold edges visible -->
+      <a-plane width="2.08" height="3.08" color="#c29a53" position="0 0 0"></a-plane>
+      <a-plane width="2.0"  height="3.0"  color="#080614" position="0 0 0.03"></a-plane>
 
-      <!-- Gold accent bars — 0.1 above body, no overlap ambiguity -->
-      <a-plane width="2.0" height="0.06" color="#c29a53" position="0  1.47 0.1"></a-plane>
-      <a-plane width="2.0" height="0.06" color="#c29a53" position="0 -1.47 0.1"></a-plane>
+      <!-- Accent bars / badge / content at z=0.05–0.07 — clear of both base planes -->
+      <a-plane width="2.0" height="0.06" color="#c29a53" position="0  1.47 0.05"></a-plane>
+      <a-plane width="2.0" height="0.06" color="#c29a53" position="0 -1.47 0.05"></a-plane>
 
-      <!-- Category badge -->
-      <a-plane width="1.2" height="0.24" color="#1a0a2e" position="0 1.18 0.1"></a-plane>
+      <a-plane width="1.2" height="0.24" color="#1a0a2e" position="0 1.18 0.05"></a-plane>
       <a-text id="ar-cat" value="${esc(f.category.toUpperCase())}"
-              position="0 1.18 0.15" align="center" color="#c29a53" width="2.8"
+              position="0 1.18 0.06" align="center" color="#c29a53" width="2.8"
               font="sourcecodepro"></a-text>
 
-      <!-- Cocktail image — bob + tilt animations -->
       <a-image id="ar-img" src="#ci${startIndex}"
-               position="0 0.38 0.15" width="1.65" height="1.65"
-               animation__bob="property: position; from: 0 0.38 0.15; to: 0 0.52 0.15;
+               position="0 0.38 0.07" width="1.65" height="1.65"
+               animation__bob="property: position; from: 0 0.38 0.07; to: 0 0.50 0.07;
                  dir: alternate; loop: true; dur: 2200; easing: easeInOutSine"
                animation__tilt="property: rotation; from: 0 -5 0; to: 0 5 0;
                  dir: alternate; loop: true; dur: 3400; easing: easeInOutSine">
       </a-image>
 
-      <!-- Cocktail name -->
       <a-text id="ar-name" value="${esc(f.name.toUpperCase())}"
-              position="0 -0.64 0.1" align="center" color="#ffffff"
+              position="0 -0.64 0.05" align="center" color="#ffffff"
               width="5.2" font="exo2bold"></a-text>
 
-      <!-- Divider -->
-      <a-plane width="1.75" height="0.012" color="#c29a53" position="0 -0.87 0.1"></a-plane>
+      <a-plane width="1.75" height="0.012" color="#c29a53" position="0 -0.87 0.05"></a-plane>
 
-      <!-- Ingredients -->
       <a-text id="ar-ings" value="${esc(fIngs)}"
-              position="0 -1.06 0.1" align="center" color="#7aadcc" width="3.2"></a-text>
+              position="0 -1.06 0.05" align="center" color="#7aadcc" width="3.2"></a-text>
 
-      <!-- Price strip -->
-      <a-plane width="2.0" height="0.52" color="#1a0a2e" position="0 -1.33 0.1"></a-plane>
+      <a-plane width="2.0" height="0.52" color="#1a0a2e" position="0 -1.33 0.05"></a-plane>
       <a-text id="ar-price" value="Rs. ${f.price}"
-              position="0 -1.33 0.15" align="center" color="#c29a53"
+              position="0 -1.33 0.06" align="center" color="#c29a53"
               width="5.5" font="exo2bold"></a-text>
 
     </a-entity>

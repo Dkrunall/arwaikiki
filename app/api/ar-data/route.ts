@@ -7,13 +7,22 @@ interface Cocktail {
   price: number; image_url: string; card_color: string; is_active: boolean;
 }
 
-const MOCK: Cocktail[] = [{
-  id: 'mock', name: 'Blue Lagoon', slug: 'test', category: 'Signature',
-  description: 'A vibrant blue tropical cocktail combining vodka, blue curaçao, and fresh lemonade.',
-  ingredients: ['Vodka', 'Blue Curaçao', 'Lemonade', 'Lemon'],
-  price: 650, image_url: 'https://www.thecocktaildb.com/images/media/drink/adxcbq1641146824.jpg',
-  card_color: '#0a4a7a', is_active: true,
-}];
+const MOCK: Cocktail[] = [
+  {
+    id: 'mock1', name: 'Blue Lagoon', slug: 'test', category: 'Signature',
+    description: 'A vibrant blue tropical cocktail with vodka, blue curaçao, and fresh lemonade.',
+    ingredients: ['Vodka', 'Blue Curaçao', 'Lemonade', 'Lemon'],
+    price: 650, image_url: 'https://picsum.photos/seed/bluelagoon/400/400',
+    card_color: '#0a4a7a', is_active: true,
+  },
+  {
+    id: 'mock2', name: 'Waikiki Sunset', slug: 'test2', category: 'Tropical',
+    description: 'A stunning sunset-inspired blend of tequila, orange juice, and grenadine.',
+    ingredients: ['Tequila', 'Orange Juice', 'Grenadine', 'Lime'],
+    price: 750, image_url: 'https://picsum.photos/seed/waikiki/400/400',
+    card_color: '#7a1a0a', is_active: true,
+  },
+];
 
 export async function GET(request: NextRequest) {
   const slug = new URL(request.url).searchParams.get('slug') || '';
