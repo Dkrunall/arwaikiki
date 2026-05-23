@@ -204,41 +204,70 @@ ${tot <= 1 ? '.navbtn{opacity:.25;pointer-events:none}' : ''}
 <div id="ld">
   <div class="ldring"></div>
   <div class="ldtitle">&#127865; Waikiki</div>
-  <div class="ldsub">Starting AR Camera&hellip;</div>
+  <div class="ldsub" id="ldsub">Starting AR Camera&hellip;</div>
 </div>
 
 <!-- Register marker event component BEFORE a-scene is parsed (official AR.js pattern) -->
 <script>
 AFRAME.registerComponent('waikiki-events', {
   init: function() {
-    var marker = this.el;
+    var marker   = this.el;
+    var card     = marker.querySelector('[rotation]'); // the -70deg entity
     var scanarea = document.getElementById('scanarea');
     var camst    = document.getElementById('camst');
     var tips     = document.getElementById('tips');
     var tipsTimer = setTimeout(function(){ if(tips) tips.style.display='block'; }, 9000);
+
     marker.addEventListener('markerFound', function() {
       clearTimeout(tipsTimer);
-      if(tips) tips.style.display='none';
+      if(tips)    tips.style.display = 'none';
       if(scanarea) scanarea.classList.add('hide');
-      if(camst){ camst.textContent='✓ LOCKED'; camst.classList.add('locked'); }
+      if(camst)  { camst.textContent = '✓ LOCKED'; camst.classList.add('locked'); }
+      // Pop-in: scale 0→1 with springy easeOutBack
+      if(card) card.setAttribute('animation__popin',
+        'property:scale; from:0 0 0; to:1 1 1; dur:450; easing:easeOutBack');
     });
+
     marker.addEventListener('markerLost', function() {
       if(scanarea) scanarea.classList.remove('hide');
-      if(camst){ camst.textContent='● SCANNING'; camst.classList.remove('locked'); }
+      if(camst)  { camst.textContent = '● SCANNING'; camst.classList.remove('locked'); }
+      // Pop-out: scale 1→0
+      if(card) card.setAttribute('animation__popout',
+        'property:scale; from:1 1 1; to:0 0 0; dur:220; easing:easeInBack');
     });
   }
+});
+
+// Camera-ready event → update loading subtitle so user knows to point at coaster
+window.addEventListener('arjs-video-loaded', function() {
+  var s = document.getElementById('ldsub');
+  if(s) s.textContent = 'Point at Hiro Coaster ↓';
+});
+
+// Camera-error event → show actionable error instead of hanging spinner
+window.addEventListener('camera-error', function() {
+  var ld = document.getElementById('ld');
+  if(ld) ld.innerHTML =
+    '<div style="text-align:center;padding:24px">' +
+    '<div style="font-size:40px;margin-bottom:16px">🚫</div>' +
+    '<div class="ldtitle" style="color:#e05555">Camera Blocked</div>' +
+    '<div class="ldsub" style="margin-top:10px;line-height:1.8">Allow camera access<br>in your browser settings<br>then reload</div>' +
+    '<button onclick="location.reload()" style="margin-top:24px;padding:12px 32px;' +
+      'background:#c29a53;color:#000;font-weight:900;border:none;border-radius:12px;' +
+      'font-size:13px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer">Reload</button>' +
+    '</div>';
 });
 </script>
 
 <!-- Minimal a-scene exactly matching official AR.js examples -->
-<a-scene embedded arjs='sourceType: webcam; debugUIEnabled: false;' renderer='precision: medium; alpha: true;'>
+<a-scene embedded arjs='sourceType: webcam; debugUIEnabled: false;' renderer='precision: medium; alpha: true; logarithmicDepthBuffer: true; antialias: true;'>
   <a-assets timeout="8000">
     ${assetTags}
   </a-assets>
 
   <a-marker preset="hiro" id="marker" waikiki-events
             smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
-    <a-entity rotation="-70 0 0">
+    <a-entity rotation="-70 0 0" scale="0 0 0">
 
       <!-- Gold border at z=0, body at z=0.03 — body masks center, gold edges visible -->
       <a-plane width="2.08" height="3.08" color="#c29a53" position="0 0 0"></a-plane>

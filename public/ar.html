@@ -208,6 +208,26 @@ function ea(s) {   // escape attribute value
 // ── Boot: fetch cocktail data from API ───────────────────────────
 document.getElementById('ld-msg').textContent = 'Loading menu…';
 
+// Camera live → update loading message
+window.addEventListener('arjs-video-loaded', function() {
+  var s = document.getElementById('ld-msg');
+  if(s) s.textContent = 'Point at Hiro Coaster ↓';
+});
+
+// Camera blocked → show error
+window.addEventListener('camera-error', function() {
+  var ld = document.getElementById('loading');
+  if(ld) ld.innerHTML =
+    '<div style="text-align:center;padding:24px">' +
+    '<div style="font-size:40px;margin-bottom:16px">🚫</div>' +
+    '<div class="ld-title" style="color:#e05555">Camera Blocked</div>' +
+    '<div class="ld-sub" style="margin-top:10px;line-height:1.8">Allow camera access<br>in your browser settings<br>then reload</div>' +
+    '<button onclick="location.reload()" style="margin-top:24px;padding:12px 32px;' +
+      'background:#c29a53;color:#000;font-weight:900;border:none;border-radius:12px;' +
+      'font-size:13px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer">Reload</button>' +
+    '</div>';
+});
+
 fetch('/api/ar-data?slug=' + encodeURIComponent(slug))
   .then(function(r) { return r.json(); })
   .then(function(res) {
@@ -229,8 +249,17 @@ function buildScene() {
   AFRAME.registerComponent('waikiki-events', {
     init: function () {
       var marker = this.el;
-      marker.addEventListener('markerFound', onMarkerFound);
-      marker.addEventListener('markerLost',  onMarkerLost);
+      var card   = marker.querySelector('[rotation]');
+      marker.addEventListener('markerFound', function() {
+        onMarkerFound();
+        if(card) card.setAttribute('animation__popin',
+          'property:scale; from:0 0 0; to:1 1 1; dur:450; easing:easeOutBack');
+      });
+      marker.addEventListener('markerLost', function() {
+        onMarkerLost();
+        if(card) card.setAttribute('animation__popout',
+          'property:scale; from:1 1 1; to:0 0 0; dur:220; easing:easeInBack');
+      });
     }
   });
 
@@ -263,11 +292,11 @@ function buildScene() {
 
   // 4. Full scene HTML
   var sceneHTML =
-    '<a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" renderer="precision: medium; alpha: true;">' +
+    '<a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" renderer="precision: medium; alpha: true; logarithmicDepthBuffer: true; antialias: true;">' +
       '<a-assets timeout="30000">' + assets + '</a-assets>' +
       '<a-marker preset="hiro" id="marker" waikiki-events' +
         ' smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">' +
-        '<a-entity rotation="-70 0 0">' + card + '</a-entity>' +
+        '<a-entity rotation="-70 0 0" scale="0 0 0">' + card + '</a-entity>' +
       '</a-marker>' +
       '<a-entity camera></a-entity>' +
     '</a-scene>';
