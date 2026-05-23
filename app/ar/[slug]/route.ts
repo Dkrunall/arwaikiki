@@ -324,49 +324,57 @@ window.addEventListener('camera-error', function() {
             smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
     <a-entity rotation="-70 0 0" scale="0 0 0">
 
-      <!-- Maroon border | cream body (matches landing page palette) -->
-      <a-plane width="2.08" height="3.08" color="#510909" position="0 0 0"></a-plane>
-      <a-plane width="2.0"  height="3.0"  color="#fcefd4" position="0 0 0.03"></a-plane>
+      <!-- Pulsing gold halo — larger plane behind box, peeks out as glowing frame -->
+      <a-plane width="1.86" height="2.66" color="#c29a53" position="0 0 -0.10"
+               animation__glow="property: opacity; from: 0.18; to: 0.70;
+                 dir: alternate; loop: true; dur: 1800; easing: easeInOutSine">
+      </a-plane>
+
+      <!-- Card slab — a-box gives real physical depth; maroon sides visible at any angle -->
+      <a-box width="1.68" height="2.58" depth="0.15" color="#510909" position="0 0 0"></a-box>
+
+      <!-- Dark face panel sits just in front of box front face -->
+      <a-plane width="1.60" height="2.50" color="#1a0510" position="0 0 0.077"></a-plane>
 
       <!-- Maroon header/footer bars -->
-      <a-plane width="2.0" height="0.08" color="#510909" position="0  1.46 0.05"></a-plane>
-      <a-plane width="2.0" height="0.08" color="#510909" position="0 -1.46 0.05"></a-plane>
+      <a-plane width="1.60" height="0.08" color="#510909" position="0  1.21 0.090"></a-plane>
+      <a-plane width="1.60" height="0.08" color="#510909" position="0 -1.21 0.090"></a-plane>
 
-      <!-- Category badge: maroon pill + cream text (exo2bold loads reliably) -->
-      <a-plane width="1.4" height="0.30" color="#510909" position="0 1.16 0.05"></a-plane>
+      <!-- Category badge -->
+      <a-plane width="1.15" height="0.26" color="#510909" position="0 0.95 0.090"></a-plane>
       <a-text id="ar-cat" value="${esc(f.category.toUpperCase())}"
-              position="0 1.16 0.09" align="center" color="#fcefd4"
-              width="3.0" font="exo2bold"></a-text>
+              position="0 0.95 0.115" align="center" color="#fcefd4"
+              width="2.0" font="exo2bold"></a-text>
 
-      <!-- Cocktail image -->
+      <!-- Cocktail image — floats well above face for strong 3D pop -->
       <a-image id="ar-img" src="#ci${startIndex}"
-               position="0 0.33 0.08" width="1.55" height="1.55"
-               animation__bob="property: position; from: 0 0.33 0.08; to: 0 0.46 0.08;
+               position="0 0.27 0.16" width="1.30" height="1.30"
+               animation__bob="property: position; from: 0 0.27 0.16; to: 0 0.44 0.16;
                  dir: alternate; loop: true; dur: 2200; easing: easeInOutSine"
                animation__tilt="property: rotation; from: 0 -5 0; to: 0 5 0;
                  dir: alternate; loop: true; dur: 3400; easing: easeInOutSine">
       </a-image>
 
       <!-- Gold divider -->
-      <a-plane width="1.75" height="0.006" color="#c29a53" position="0 -0.48 0.05"></a-plane>
+      <a-plane width="1.45" height="0.005" color="#c29a53" position="0 -0.40 0.090"></a-plane>
 
-      <!-- Cocktail name in landing-page maroon -->
+      <!-- Cocktail name -->
       <a-text id="ar-name" value="${esc(f.name.toUpperCase())}"
-              position="0 -0.65 0.05" align="center" color="#510909"
-              width="5.0" font="exo2bold"></a-text>
+              position="0 -0.54 0.090" align="center" color="#fcefd4"
+              width="2.0" font="exo2bold"></a-text>
 
       <!-- Gold divider -->
-      <a-plane width="1.5" height="0.004" color="#c29a53" position="0 -0.84 0.05"></a-plane>
+      <a-plane width="1.30" height="0.004" color="#c29a53" position="0 -0.70 0.090"></a-plane>
 
-      <!-- Ingredients in softer maroon -->
+      <!-- Ingredients -->
       <a-text id="ar-ings" value="${esc(fIngs)}"
-              position="0 -1.02 0.05" align="center" color="#7a2020" width="3.2"></a-text>
+              position="0 -0.84 0.090" align="center" color="#c8b89a" width="1.8"></a-text>
 
-      <!-- Price strip: maroon bg + cream price text -->
-      <a-plane width="2.0" height="0.54" color="#510909" position="0 -1.33 0.05"></a-plane>
+      <!-- Price strip -->
+      <a-plane width="1.60" height="0.45" color="#510909" position="0 -1.05 0.090"></a-plane>
       <a-text id="ar-price" value="Rs. ${f.price}"
-              position="0 -1.33 0.09" align="center" color="#fcefd4"
-              width="5.2" font="exo2bold"></a-text>
+              position="0 -1.05 0.115" align="center" color="#fcefd4"
+              width="2.0" font="exo2bold"></a-text>
 
     </a-entity>
   </a-marker>
