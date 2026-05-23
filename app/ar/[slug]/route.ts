@@ -290,11 +290,20 @@ AFRAME.registerComponent('waikiki-events', {
   }
 });
 
-// camera-init → camera stream confirmed, update loading text with green tick
+// camera-init fires after the user grants camera permission (= valid user gesture)
+// This is the earliest safe moment to call video.play() on iOS/Android
+function playAllVideos() {
+  document.querySelectorAll('a-assets video').forEach(function(v) {
+    v.play().catch(function(){});
+  });
+}
 window.addEventListener('camera-init', function() {
   var s = document.getElementById('ldsub');
   if(s){ s.textContent = '✓ Camera Active'; s.style.color = '#5cb85c'; }
+  playAllVideos();
 });
+// Fallback: first touch anywhere (covers browsers where camera-init fires too early)
+document.addEventListener('touchstart', playAllVideos, { once: true });
 
 // arjs-video-loaded → video appended to DOM, ready to scan
 window.addEventListener('arjs-video-loaded', function() {
@@ -464,10 +473,6 @@ document.querySelector('a-scene').addEventListener('loaded', function() {
   setTimeout(function(){ ld.style.display = 'none'; }, 700);
   // Clear WebGL canvas to transparent so the CSS camera video behind shows through
   if (this.renderer) this.renderer.setClearColor(0x000000, 0);
-  // Start any preloaded video assets
-  document.querySelectorAll('a-assets video').forEach(function(v) {
-    v.play().catch(function(){});
-  });
 });
 
 // ── Description sheet ────────────────────────────────────────────

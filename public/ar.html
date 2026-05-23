@@ -271,11 +271,19 @@ function ea(s) {   // escape attribute value
 // ── Boot: fetch cocktail data from API ───────────────────────────
 document.getElementById('ld-msg').textContent = 'Loading menu…';
 
-// camera-init → stream confirmed
+// camera-init fires after camera permission granted — safe to call video.play()
+function playAllVideos() {
+  document.querySelectorAll('a-assets video').forEach(function(v) {
+    v.play().catch(function(){});
+  });
+}
 window.addEventListener('camera-init', function() {
   var s = document.getElementById('ld-msg');
   if(s){ s.textContent = '✓ Camera Active'; s.style.color = '#5cb85c'; }
+  playAllVideos();
 });
+// Fallback: first touch anywhere
+document.addEventListener('touchstart', playAllVideos, { once: true });
 
 // arjs-video-loaded → video in DOM, ready to scan
 window.addEventListener('arjs-video-loaded', function() {
@@ -398,10 +406,6 @@ function buildScene() {
     document.getElementById('hud').style.display = 'flex';
     // Clear WebGL canvas to transparent so the CSS camera video behind shows through
     if (this.renderer) this.renderer.setClearColor(0x000000, 0);
-    // Start any preloaded video assets
-    document.querySelectorAll('a-assets video').forEach(function(v) {
-      v.play().catch(function(){});
-    });
     render(); // fill in first cocktail data
   });
 
