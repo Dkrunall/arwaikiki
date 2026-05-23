@@ -466,22 +466,29 @@ function nav(dir) {
   if (navBusy) return;
   closeDesc();
   var card = document.getElementById('ar-card');
+  if (!card) { cur = ((cur + dir) % tot + tot) % tot; render(); return; }
 
-  if (!markerVisible || !card) {
+  // Read actual live scale — more reliable than a tracked boolean
+  var sc = card.object3D ? card.object3D.scale : null;
+  var curScale = sc ? sc.x : 0;
+
+  if (curScale < 0.05) {
+    // Card not visible — swap content instantly, no animation needed
     cur = ((cur + dir) % tot + tot) % tot;
     render();
     return;
   }
 
   navBusy = true;
-  // Bounce out
+  var fromStr = curScale.toFixed(3) + ' ' + curScale.toFixed(3) + ' ' + curScale.toFixed(3);
+  // Bounce out from actual current scale
   card.setAttribute('animation__navout',
-    'property:scale; from:1 1 1; to:0 0 0; dur:200; easing:easeInBack');
+    'property:scale; from:' + fromStr + '; to:0 0 0; dur:200; easing:easeInBack');
 
   setTimeout(function() {
     cur = ((cur + dir) % tot + tot) % tot;
     render();
-    // Bounce in with overshoot
+    // Bounce in with springy overshoot
     card.setAttribute('animation__navin',
       'property:scale; from:0 0 0; to:1 1 1; dur:420; easing:easeOutBack');
     setTimeout(function() { navBusy = false; }, 440);

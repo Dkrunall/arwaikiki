@@ -13,14 +13,14 @@ const MOCK: Cocktail[] = [
     description: 'A vibrant blue tropical cocktail with vodka, blue curaçao, and fresh lemonade.',
     ingredients: ['Vodka', 'Blue Curaçao', 'Lemonade', 'Lemon'],
     price: 650, image_url: 'https://picsum.photos/seed/bluelagoon/400/400',
-    video_url: '/videos/c1.mp4', card_color: '#0a4a7a', is_active: true,
+    video_url: '/videos/c11.mp4', card_color: '#0a4a7a', is_active: true,
   },
   {
     id: 'mock2', name: 'Waikiki Sunset', slug: 'test2', category: 'Tropical',
     description: 'A stunning sunset-inspired blend of tequila, orange juice, and grenadine.',
     ingredients: ['Tequila', 'Orange Juice', 'Grenadine', 'Lime'],
     price: 750, image_url: 'https://picsum.photos/seed/waikiki/400/400',
-    video_url: '/videos/c2.mp4', card_color: '#7a1a0a', is_active: true,
+    video_url: '/videos/c12.mp4', card_color: '#7a1a0a', is_active: true,
   },
 ];
 
