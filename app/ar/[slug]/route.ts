@@ -344,48 +344,44 @@ window.addEventListener('camera-error', function() {
       <!-- Card slab — a-box gives real physical depth; maroon sides visible at any angle -->
       <a-box width="1.68" height="2.58" depth="0.15" color="#510909" position="0 0 0"></a-box>
 
-      <!-- Dark face panel — same size as box, fully covers its front face -->
-      <a-plane width="1.68" height="2.58" color="#1a0510" position="0 0 0.077"></a-plane>
-
-      <!-- Maroon header/footer bars -->
-      <a-plane width="1.60" height="0.08" color="#510909" position="0  1.21 0.090"></a-plane>
-      <a-plane width="1.60" height="0.08" color="#510909" position="0 -1.21 0.090"></a-plane>
-
-      <!-- Category badge -->
-      <a-plane width="1.15" height="0.26" color="#510909" position="0 0.95 0.090"></a-plane>
-      <a-text id="ar-cat" value="${esc(f.category.toUpperCase())}"
-              position="0 0.95 0.115" align="center" color="#fcefd4"
-              width="2.0" font="exo2bold"></a-text>
-
-      <!-- Cocktail media — a-video for video assets, a-image for images -->
+      <!-- Video / image fills the entire card face -->
       <${f.video_url ? 'a-video' : 'a-image'} id="ar-img" src="#ci${startIndex}"
-               position="0 0.27 0.16" width="0.75" height="1.33"
-               animation__bob="property: position; from: 0 0.27 0.16; to: 0 0.38 0.16;
-                 dir: alternate; loop: true; dur: 2200; easing: easeInOutSine"
-               animation__tilt="property: rotation; from: 0 -5 0; to: 0 5 0;
-                 dir: alternate; loop: true; dur: 3400; easing: easeInOutSine">
+               position="0 0 0.077" width="1.60" height="2.50">
       </${f.video_url ? 'a-video' : 'a-image'}>
 
-      <!-- Gold divider -->
-      <a-plane width="1.45" height="0.005" color="#c29a53" position="0 -0.40 0.090"></a-plane>
+      <!-- Top overlay: dark strip + category pill -->
+      <a-plane width="1.60" height="0.36" color="#000000" opacity="0.55"
+               position="0 1.07 0.083"></a-plane>
+      <a-plane width="1.12" height="0.24" color="#510909" opacity="0.92"
+               position="0 1.07 0.086"></a-plane>
+      <a-text id="ar-cat" value="${esc(f.category.toUpperCase())}"
+              position="0 1.07 0.090" align="center" color="#fcefd4"
+              width="2.0" font="exo2bold"></a-text>
+
+      <!-- Bottom overlay: dark strip for name / ingredients / price -->
+      <a-plane width="1.60" height="1.00" color="#000000" opacity="0.68"
+               position="0 -0.75 0.083"></a-plane>
 
       <!-- Cocktail name -->
       <a-text id="ar-name" value="${esc(f.name.toUpperCase())}"
-              position="0 -0.54 0.090" align="center" color="#fcefd4"
+              position="0 -0.45 0.088" align="center" color="#fcefd4"
               width="2.0" font="exo2bold"></a-text>
 
       <!-- Gold divider -->
-      <a-plane width="1.30" height="0.004" color="#c29a53" position="0 -0.70 0.090"></a-plane>
+      <a-plane width="1.35" height="0.004" color="#c29a53"
+               position="0 -0.62 0.088"></a-plane>
 
       <!-- Ingredients -->
       <a-text id="ar-ings" value="${esc(fIngs)}"
-              position="0 -0.84 0.090" align="center" color="#c8b89a" width="1.8"></a-text>
+              position="0 -0.76 0.088" align="center" color="#c8b89a"
+              width="1.8"></a-text>
 
-      <!-- Price strip -->
-      <a-plane width="1.60" height="0.45" color="#510909" position="0 -1.05 0.090"></a-plane>
+      <!-- Gold price pill -->
+      <a-plane width="0.88" height="0.28" color="#c29a53" opacity="0.95"
+               position="0 -0.98 0.088"></a-plane>
       <a-text id="ar-price" value="Rs. ${f.price}"
-              position="0 -1.05 0.115" align="center" color="#fcefd4"
-              width="2.0" font="exo2bold"></a-text>
+              position="0 -0.98 0.092" align="center" color="#1a0510"
+              width="1.6" font="exo2bold"></a-text>
 
     </a-entity>
   </a-marker>
