@@ -332,8 +332,11 @@ function buildScene() {
     }
   });
 
-  // 2. Build <a-assets> — preload all images with crossorigin so WebGL can use them
+  // 2. Build <a-assets> — video element if video_url present, otherwise img
   var assets = DATA.map(function(c, i) {
+    if (c.video_url) {
+      return '<video id="ci' + i + '" src="' + ea(c.video_url) + '" autoplay loop muted playsinline crossorigin="anonymous"></video>';
+    }
     return '<img id="ci' + i + '" src="' + ea(c.image_url) + '" crossorigin="anonymous"/>';
   }).join('');
 
@@ -353,9 +356,9 @@ function buildScene() {
     // Category badge
     '<a-plane width="1.15" height="0.26" color="#510909" position="0 0.95 0.090"></a-plane>',
     '<a-text id="ar-cat" value="…" position="0 0.95 0.115" align="center" color="#fcefd4" width="2.0" font="exo2bold"></a-text>',
-    // Cocktail image — floats well above face for strong 3D pop
-    '<a-image id="ar-img" src="#ci' + cur + '" position="0 0.27 0.16" width="1.30" height="1.30"',
-    '  animation__bob="property:position; from:0 0.27 0.16; to:0 0.44 0.16; dir:alternate; loop:true; dur:2200; easing:easeInOutSine"',
+    // Cocktail media — portrait 9:16 video or square image, floats above card face
+    '<a-image id="ar-img" src="#ci' + cur + '" position="0 0.27 0.16" width="0.75" height="1.33"',
+    '  animation__bob="property:position; from:0 0.27 0.16; to:0 0.38 0.16; dir:alternate; loop:true; dur:2200; easing:easeInOutSine"',
     '  animation__tilt="property:rotation; from:0 -5 0; to:0 5 0; dir:alternate; loop:true; dur:3400; easing:easeInOutSine">',
     '</a-image>',
     // Gold divider
@@ -395,6 +398,10 @@ function buildScene() {
     document.getElementById('hud').style.display = 'flex';
     // Clear WebGL canvas to transparent so the CSS camera video behind shows through
     if (this.renderer) this.renderer.setClearColor(0x000000, 0);
+    // Start any preloaded video assets
+    document.querySelectorAll('a-assets video').forEach(function(v) {
+      v.play().catch(function(){});
+    });
     render(); // fill in first cocktail data
   });
 
@@ -470,6 +477,9 @@ function render() {
   var price = document.getElementById('ar-price');
 
   if (img)   img.setAttribute('src', '#ci' + cur);
+  // Ensure video plays when navigating to a cocktail that has one
+  var asset = document.getElementById('ci' + cur);
+  if (asset && asset.tagName === 'VIDEO') asset.play().catch(function(){});
   if (cat)   cat.setAttribute('value', c.category.toUpperCase());
   if (name)  name.setAttribute('value', c.name.toUpperCase());
   if (ingEl) ingEl.setAttribute('value', ings);

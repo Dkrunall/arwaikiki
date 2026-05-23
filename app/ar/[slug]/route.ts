@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 interface Cocktail {
   id: string; name: string; slug: string; category: string;
   description: string; ingredients: string[] | string;
-  price: number; image_url: string; card_color: string; is_active: boolean;
+  price: number; image_url: string; video_url?: string; card_color: string; is_active: boolean;
 }
 
 const MOCK: Cocktail[] = [
@@ -13,7 +13,7 @@ const MOCK: Cocktail[] = [
     description: 'A vibrant blue tropical cocktail with vodka, blue curaçao, and fresh lemonade.',
     ingredients: ['Vodka', 'Blue Curaçao', 'Lemonade', 'Lemon'],
     price: 650, image_url: 'https://picsum.photos/seed/bluelagoon/400/400',
-    card_color: '#0a4a7a', is_active: true,
+    video_url: '/videos/c1.mp4', card_color: '#0a4a7a', is_active: true,
   },
   {
     id: 'mock2', name: 'Waikiki Sunset', slug: 'test2', category: 'Tropical',
@@ -71,6 +71,7 @@ function buildHTML(cocktails: Cocktail[], startIndex: number, origin: string): s
       ? c.ingredients : String(c.ingredients).split(',').map(s => s.trim()),
     price: c.price,
     image_url: c.image_url || '',
+    video_url: c.video_url || '',
     card_color: c.card_color || '#0c0918',
   }));
 
@@ -78,9 +79,11 @@ function buildHTML(cocktails: Cocktail[], startIndex: number, origin: string): s
   const tot = data.length;
   const fIngs = f.ingredients.slice(0, 4).join(' \xb7 ');
 
-  // Pre-load every cocktail image as an asset (crossorigin for WebGL)
+  // Pre-load assets — video element if video_url present, otherwise img
   const assetTags = data.map((c, i) =>
-    `<img id="ci${i}" src="${esc(c.image_url)}" crossorigin="anonymous"/>`
+    c.video_url
+      ? `<video id="ci${i}" src="${esc(c.video_url)}" autoplay loop muted playsinline crossorigin="anonymous"></video>`
+      : `<img id="ci${i}" src="${esc(c.image_url)}" crossorigin="anonymous"/>`
   ).join('\n    ');
 
   // Safe JSON — prevent </script> injection
@@ -346,10 +349,10 @@ window.addEventListener('camera-error', function() {
               position="0 0.95 0.115" align="center" color="#fcefd4"
               width="2.0" font="exo2bold"></a-text>
 
-      <!-- Cocktail image — floats well above face for strong 3D pop -->
+      <!-- Cocktail media — portrait 9:16 video or square image, floats above card face -->
       <a-image id="ar-img" src="#ci${startIndex}"
-               position="0 0.27 0.16" width="1.30" height="1.30"
-               animation__bob="property: position; from: 0 0.27 0.16; to: 0 0.44 0.16;
+               position="0 0.27 0.16" width="0.75" height="1.33"
+               animation__bob="property: position; from: 0 0.27 0.16; to: 0 0.38 0.16;
                  dir: alternate; loop: true; dur: 2200; easing: easeInOutSine"
                animation__tilt="property: rotation; from: 0 -5 0; to: 0 5 0;
                  dir: alternate; loop: true; dur: 3400; easing: easeInOutSine">
@@ -461,6 +464,10 @@ document.querySelector('a-scene').addEventListener('loaded', function() {
   setTimeout(function(){ ld.style.display = 'none'; }, 700);
   // Clear WebGL canvas to transparent so the CSS camera video behind shows through
   if (this.renderer) this.renderer.setClearColor(0x000000, 0);
+  // Start any preloaded video assets
+  document.querySelectorAll('a-assets video').forEach(function(v) {
+    v.play().catch(function(){});
+  });
 });
 
 // ── Description sheet ────────────────────────────────────────────
@@ -500,6 +507,9 @@ function render() {
 
   // Update A-Frame card
   document.getElementById('ar-img').setAttribute('src', '#ci' + cur);
+  // Ensure video plays when navigating to a cocktail that has one
+  var asset = document.getElementById('ci' + cur);
+  if (asset && asset.tagName === 'VIDEO') asset.play().catch(function(){});
   document.getElementById('ar-cat').setAttribute('value', c.category.toUpperCase());
   document.getElementById('ar-name').setAttribute('value', c.name.toUpperCase());
   document.getElementById('ar-ings').setAttribute('value', ings);
