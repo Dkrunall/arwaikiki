@@ -333,8 +333,8 @@ window.addEventListener('camera-error', function() {
       <!-- Card slab — a-box gives real physical depth; maroon sides visible at any angle -->
       <a-box width="1.68" height="2.58" depth="0.15" color="#510909" position="0 0 0"></a-box>
 
-      <!-- Dark face panel sits just in front of box front face -->
-      <a-plane width="1.60" height="2.50" color="#1a0510" position="0 0 0.077"></a-plane>
+      <!-- Dark face panel — same size as box, fully covers its front face -->
+      <a-plane width="1.68" height="2.58" color="#1a0510" position="0 0 0.077"></a-plane>
 
       <!-- Maroon header/footer bars -->
       <a-plane width="1.60" height="0.08" color="#510909" position="0  1.21 0.090"></a-plane>
