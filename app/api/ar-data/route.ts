@@ -20,7 +20,7 @@ const MOCK: Cocktail[] = [
     description: 'A stunning sunset-inspired blend of tequila, orange juice, and grenadine.',
     ingredients: ['Tequila', 'Orange Juice', 'Grenadine', 'Lime'],
     price: 750, image_url: 'https://picsum.photos/seed/waikiki/400/400',
-    card_color: '#7a1a0a', is_active: true,
+    video_url: '/videos/c2.mp4', card_color: '#7a1a0a', is_active: true,
   },
 ];
 
