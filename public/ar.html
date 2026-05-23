@@ -289,6 +289,8 @@ function buildScene() {
     ld.classList.add('gone');
     setTimeout(function () { ld.style.display = 'none'; }, 700);
     document.getElementById('hud').style.display = 'flex';
+    // Clear WebGL canvas to transparent so the CSS camera video behind shows through
+    if (this.renderer) this.renderer.setClearColor(0x000000, 0);
     render(); // fill in first cocktail data
   });
 

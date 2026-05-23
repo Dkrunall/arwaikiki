@@ -336,6 +336,8 @@ document.querySelector('a-scene').addEventListener('loaded', function() {
   var ld = document.getElementById('ld');
   ld.classList.add('gone');
   setTimeout(function(){ ld.style.display = 'none'; }, 700);
+  // Clear WebGL canvas to transparent so the CSS camera video behind shows through
+  if (this.renderer) this.renderer.setClearColor(0x000000, 0);
 });
 
 // Navigate between cocktails (prev / next)
