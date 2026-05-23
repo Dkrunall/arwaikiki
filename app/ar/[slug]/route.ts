@@ -517,14 +517,20 @@ function nav(dir) {
 
   navBusy = true;
   var fromStr = curScale.toFixed(3) + ' ' + curScale.toFixed(3) + ' ' + curScale.toFixed(3);
-  // Bounce out from actual current scale
+
+  // Remove ALL existing scale animations so A-Frame treats the next setAttribute
+  // as a new animation — without this, identical attribute values are ignored
+  card.removeAttribute('animation__popin');
+  card.removeAttribute('animation__navin');
+  card.removeAttribute('animation__navout');
+
   card.setAttribute('animation__navout',
     'property:scale; from:' + fromStr + '; to:0 0 0; dur:200; easing:easeInBack');
 
   setTimeout(function() {
     cur = ((cur + dir) % tot + tot) % tot;
     render();
-    // Bounce in with springy overshoot
+    card.removeAttribute('animation__navout');
     card.setAttribute('animation__navin',
       'property:scale; from:0 0 0; to:1 1 1; dur:420; easing:easeOutBack');
     setTimeout(function() { navBusy = false; }, 440);
