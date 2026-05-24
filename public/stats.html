@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Waikiki AR &mdash; Scan Stats</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Helvetica Neue',Arial,sans-serif;background:#060212;
+  color:#fff;min-height:100vh;padding:24px 20px 48px}
+
+/* Header */
+.header{display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:28px;flex-wrap:wrap;gap:12px}
+.header-left{display:flex;align-items:center;gap:14px}
+.logo{font-size:20px;font-weight:900;text-transform:uppercase;
+  letter-spacing:.22em;color:#c29a53}
+.badge{font-size:10px;font-weight:900;text-transform:uppercase;
+  letter-spacing:.15em;padding:5px 12px;border-radius:20px;
+  background:rgba(194,154,83,.12);border:1px solid rgba(194,154,83,.3);
+  color:#c29a53}
+.refresh-btn{padding:9px 20px;background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.14);border-radius:12px;
+  color:rgba(255,255,255,.7);font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.1em;cursor:pointer;
+  transition:background .2s}
+.refresh-btn:hover{background:rgba(255,255,255,.13)}
+
+/* Summary cards */
+.summary{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:28px}
+.sum-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
+  border-radius:16px;padding:20px 18px}
+.sum-label{font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.18em;color:rgba(255,255,255,.45);margin-bottom:6px}
+.sum-value{font-size:32px;font-weight:900;color:#c29a53;line-height:1}
+.sum-sub{font-size:11px;color:rgba(255,255,255,.35);margin-top:5px}
+
+/* Section title */
+.section-title{font-size:11px;font-weight:900;text-transform:uppercase;
+  letter-spacing:.18em;color:rgba(255,255,255,.4);margin-bottom:14px}
+
+/* Cocktail rows */
+.list{display:flex;flex-direction:column;gap:10px}
+.row{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);
+  border-radius:14px;padding:16px 18px;
+  display:flex;align-items:center;gap:14px;
+  transition:background .2s}
+.row:hover{background:rgba(255,255,255,.07)}
+.rank{font-size:13px;font-weight:900;color:rgba(255,255,255,.25);
+  width:20px;text-align:center;flex-shrink:0}
+.rank.top{color:#c29a53}
+.dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.row-info{flex:1;min-width:0}
+.row-name{font-size:14px;font-weight:900;text-transform:uppercase;
+  letter-spacing:.06em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row-cat{font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.12em;color:rgba(255,255,255,.4);margin-top:2px}
+.row-stats{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+.today-count{font-size:18px;font-weight:900;color:#c29a53;line-height:1}
+.today-label{font-size:9px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.1em;color:rgba(194,154,83,.55)}
+.alltime{font-size:10px;color:rgba(255,255,255,.3);margin-top:2px}
+
+/* Bar */
+.bar-wrap{margin-top:10px;height:3px;background:rgba(255,255,255,.06);
+  border-radius:2px;overflow:hidden}
+.bar-fill{height:100%;border-radius:2px;
+  background:linear-gradient(90deg,#510909,#c29a53);
+  transition:width .6s ease}
+
+/* Empty / loading */
+.empty{text-align:center;padding:60px 20px;color:rgba(255,255,255,.3);
+  font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+
+/* Last updated */
+.footer{text-align:center;margin-top:28px;
+  font-size:10px;color:rgba(255,255,255,.2);letter-spacing:.1em;
+  text-transform:uppercase}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <span class="logo">&#127865; Waikiki</span>
+    <span class="badge">Scan Stats</span>
+  </div>
+  <button class="refresh-btn" onclick="load()">&#8635; Refresh</button>
+</div>
+
+<div class="summary">
+  <div class="sum-card">
+    <div class="sum-label">Scans Today</div>
+    <div class="sum-value" id="total-today">—</div>
+    <div class="sum-sub" id="today-date"></div>
+  </div>
+  <div class="sum-card">
+    <div class="sum-label">All-Time Scans</div>
+    <div class="sum-value" id="total-all">—</div>
+    <div class="sum-sub">since launch</div>
+  </div>
+</div>
+
+<div class="section-title">Cocktails &mdash; ranked by today</div>
+<div class="list" id="list">
+  <div class="empty">Loading&hellip;</div>
+</div>
+
+<div class="footer" id="updated"></div>
+
+<script>
+var maxToday = 1;
+
+function load() {
+  fetch('/api/ar-stats')
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      document.getElementById('total-today').textContent = data.totalToday;
+      document.getElementById('total-all').textContent   = data.totalAllTime;
+      document.getElementById('today-date').textContent  =
+        new Date().toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' });
+
+      var list = document.getElementById('list');
+
+      if (!data.cocktails.length) {
+        list.innerHTML = '<div class="empty">No cocktails found</div>';
+        return;
+      }
+
+      maxToday = Math.max(1, Math.max.apply(null, data.cocktails.map(function(c){ return c.today; })));
+
+      list.innerHTML = data.cocktails.map(function(c, i) {
+        var pct = Math.round((c.today / maxToday) * 100);
+        var isTop = i === 0 && c.today > 0;
+        return [
+          '<div class="row">',
+            '<div class="rank ' + (isTop ? 'top' : '') + '">' + (i + 1) + '</div>',
+            '<div class="dot" style="background:' + c.card_color + '"></div>',
+            '<div class="row-info">',
+              '<div class="row-name">' + esc(c.name) + '</div>',
+              '<div class="row-cat">' + esc(c.category) + '</div>',
+              '<div class="bar-wrap"><div class="bar-fill" style="width:' + pct + '%"></div></div>',
+            '</div>',
+            '<div class="row-stats">',
+              '<div class="today-count">' + c.today + '</div>',
+              '<div class="today-label">today</div>',
+              '<div class="alltime">' + c.all_time + ' total</div>',
+            '</div>',
+          '</div>',
+        ].join('');
+      }).join('');
+
+      document.getElementById('updated').textContent =
+        'Updated ' + new Date().toLocaleTimeString();
+    })
+    .catch(function() {
+      document.getElementById('list').innerHTML =
+        '<div class="empty">Failed to load &mdash; check Supabase connection</div>';
+    });
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+load();
+// Auto-refresh every 60 seconds
+setInterval(load, 60000);
+</script>
+</body>
+</html>
