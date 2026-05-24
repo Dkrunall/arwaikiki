@@ -5,7 +5,7 @@ interface Cocktail {
   id: string; name: string; slug: string; category: string;
   description: string; ingredients: string[] | string;
   price: number; image_url: string; video_url?: string; card_color: string;
-  is_active: boolean; scan_count?: number;
+  is_active: boolean; scan_count?: number; is_daily_special?: boolean;
 }
 
 const MOCK: Cocktail[] = [
@@ -86,7 +86,8 @@ function buildHTML(cocktails: Cocktail[], startIndex: number, origin: string): s
     image_url:  c.image_url || '',
     video_url:  c.video_url || '',
     card_color: c.card_color || '#0c0918',
-    scan_count: c.scan_count || 0,
+    scan_count:       c.scan_count || 0,
+    is_daily_special: c.is_daily_special || false,
   }));
 
   const f   = data[startIndex];
@@ -408,6 +409,15 @@ window.addEventListener('camera-error', function() {
               position="0 -1.38 0.092" align="center" color="#c29a53"
               width="1.5"></a-text>
 
+      <!-- Daily special badge -->
+      <a-entity id="ar-badge" visible="${f.is_daily_special ? 'true' : 'false'}">
+        <a-plane width="1.60" height="0.16" color="#c29a53"
+                 position="0 1.47 0.094"></a-plane>
+        <a-text value="DAILY SPECIAL"
+                position="0 1.47 0.097" align="center" color="#1a0510"
+                width="2.2" font="exo2bold"></a-text>
+      </a-entity>
+
       <!-- Floating bubbles fizz effect -->
       <a-entity geometry="primitive:sphere;radius:0.042;segmentsHeight:6;segmentsWidth:8" material="color:#b8dff0;opacity:0.55;transparent:true" position="-0.50 -1.20 0.12" animation__rise="property:position;from:-0.50 -1.20 0.12;to:-0.50 1.90 0.12;dur:3200;loop:true;easing:linear" animation__fade="property:material.opacity;from:0.55;to:0;dur:3200;loop:true;easing:easeInQuad"></a-entity>
       <a-entity geometry="primitive:sphere;radius:0.030;segmentsHeight:6;segmentsWidth:8" material="color:#c8e8f8;opacity:0.45;transparent:true" position="0.28 -0.90 0.12" animation__rise="property:position;from:0.28 -0.90 0.12;to:0.28 1.80 0.12;dur:2600;loop:true;delay:700;easing:linear" animation__fade="property:material.opacity;from:0.45;to:0;dur:2600;loop:true;delay:700;easing:easeInQuad"></a-entity>
@@ -483,6 +493,10 @@ window.addEventListener('camera-error', function() {
     <div id="desc-text"></div>
     <div id="desc-ings-label">Ingredients</div>
     <div id="desc-ings"></div>
+    <div id="desc-special" style="display:none;font-size:10px;font-weight:900;
+      text-transform:uppercase;letter-spacing:.18em;color:#fff;
+      background:#c29a53;padding:6px 16px;border-radius:20px;
+      margin-bottom:16px;text-align:center">&#9733; Daily Special</div>
     <div id="desc-footer">
       <div>
         <div id="desc-price"></div>
@@ -530,6 +544,8 @@ function showDesc() {
   document.getElementById('desc-price').textContent = 'Rs. ' + c.price;
   var ds = document.getElementById('desc-scans');
   if (ds) ds.textContent = c.scan_count > 0 ? '🔥 ' + c.scan_count + ' scans today' : '';
+  var sp = document.getElementById('desc-special');
+  if (sp) sp.style.display = c.is_daily_special ? 'block' : 'none';
   var el = document.getElementById('desc-ings');
   el.innerHTML = '';
   var ings = Array.isArray(c.ingredients) ? c.ingredients
@@ -625,8 +641,12 @@ function render() {
   var scansEl = document.getElementById('ar-scans');
   if (scansEl) scansEl.setAttribute('value', c.scan_count > 0 ? c.scan_count + ' scans today' : '');
 
+  // Toggle daily special badge
+  var badge = document.getElementById('ar-badge');
+  if (badge) badge.setAttribute('visible', c.is_daily_special ? 'true' : 'false');
+
   // Update HUD bottom bar
-  document.getElementById('ciname').textContent = c.name;
+  document.getElementById('ciname').textContent = (c.is_daily_special ? '★ ' : '') + c.name;
   document.getElementById('cisub').textContent  = c.category + ' \xb7 Rs. ' + c.price;
   document.getElementById('cicnt').textContent  = (cur + 1) + ' / ' + tot;
 }

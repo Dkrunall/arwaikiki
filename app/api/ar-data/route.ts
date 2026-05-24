@@ -5,7 +5,7 @@ interface Cocktail {
   id: string; name: string; slug: string; category: string;
   description: string; ingredients: string[] | string;
   price: number; image_url: string; video_url?: string; card_color: string;
-  is_active: boolean; scan_count?: number;
+  is_active: boolean; scan_count?: number; is_daily_special?: boolean;
 }
 
 const MOCK: Cocktail[] = [
@@ -66,7 +66,8 @@ export async function GET(request: NextRequest) {
     image_url:  c.image_url || '',
     video_url:  c.video_url || '',
     card_color: c.card_color || '#0c0918',
-    scan_count: scanCounts[c.slug] || 0,
+    scan_count:       scanCounts[c.slug] || 0,
+    is_daily_special: c.is_daily_special || false,
   }));
 
   let startIndex = normalised.findIndex(c => c.slug === slug);
