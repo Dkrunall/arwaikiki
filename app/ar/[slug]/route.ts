@@ -553,27 +553,23 @@ function showToast(msg) {
 async function sharecocktail() {
   var c = DATA[cur];
   var shareUrl = window.location.origin + '/ar/' + c.slug;
-  var shareText = c.name + ' \u2014 ' + (c.description || c.category) + '
-
-Scan the Waikiki AR menu to see it come alive! \ud83c\udf79';
-  // Try with image (best for Instagram Stories / WhatsApp)
+  var shareTitle = c.name + ' | Waikiki Bar';
+  var shareText  = c.name + ' \u2014 ' + (c.description || c.category) + ' Scan the Waikiki AR menu to see it come alive!';
   if (navigator.canShare) {
     try {
       var res = await fetch(c.image_url);
       var blob = await res.blob();
       var file = new File([blob], 'cocktail.jpg', { type: blob.type });
       if (navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: c.name, text: shareText, url: shareUrl });
+        await navigator.share({ files: [file], title: shareTitle, text: shareText, url: shareUrl });
         return;
       }
     } catch(e) {}
   }
-  // Share without image
   if (navigator.share) {
-    try { await navigator.share({ title: c.name, text: shareText, url: shareUrl }); return; }
+    try { await navigator.share({ title: shareTitle, text: shareText, url: shareUrl }); return; }
     catch(e) { return; }
   }
-  // Desktop fallback: copy link
   try { await navigator.clipboard.writeText(shareUrl); showToast('Link copied!'); }
   catch(e) { showToast('Share: ' + shareUrl); }
 }
