@@ -4,7 +4,8 @@ import { createClient } from '@supabase/supabase-js';
 interface Cocktail {
   id: string; name: string; slug: string; category: string;
   description: string; ingredients: string[] | string;
-  price: number; image_url: string; video_url?: string; card_color: string; is_active: boolean;
+  price: number; image_url: string; video_url?: string; card_color: string;
+  is_active: boolean; scan_count?: number;
 }
 
 const MOCK: Cocktail[] = [
@@ -32,6 +33,8 @@ export async function GET(
 
   let cocktails: Cocktail[] = [];
 
+  let scanCounts: Record<string, number> = {};
+
   if (slug === 'test' || slug === 'mock') {
     cocktails = MOCK;
   } else {
@@ -39,21 +42,31 @@ export async function GET(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
-    const { data } = await supabase
-      .from('cocktails').select('*')
-      .eq('is_active', true)
-      .order('created_at', { ascending: false });
-    cocktails = data || [];
+    const [cocktailRes, scanRes] = await Promise.all([
+      supabase.from('cocktails').select('*').eq('is_active', true)
+        .order('created_at', { ascending: false }),
+      supabase.from('cocktail_scans').select('cocktail_slug')
+        .gte('scanned_at', new Date(new Date().setHours(0, 0, 0, 0)).toISOString()),
+    ]);
+    cocktails = cocktailRes.data || [];
+    (scanRes.data || []).forEach((r: { cocktail_slug: string }) => {
+      scanCounts[r.cocktail_slug] = (scanCounts[r.cocktail_slug] || 0) + 1;
+    });
   }
 
   if (!cocktails.length) return NextResponse.redirect(new URL('/', request.url));
 
-  let startIndex = cocktails.findIndex(c => c.slug === slug);
+  // Merge today's scan counts into cocktail objects before passing to buildHTML
+  const cocktailsWithCounts = cocktails.map(c => ({
+    ...c, scan_count: scanCounts[c.slug] || 0,
+  }));
+
+  let startIndex = cocktailsWithCounts.findIndex(c => c.slug === slug);
   if (startIndex < 0) startIndex = 0;
 
   const origin = new URL(request.url).origin;
 
-  return new NextResponse(buildHTML(cocktails, startIndex, origin), {
+  return new NextResponse(buildHTML(cocktailsWithCounts, startIndex, origin), {
     headers: { 'Content-Type': 'text/html; charset=utf-8' },
   });
 }
@@ -69,10 +82,11 @@ function buildHTML(cocktails: Cocktail[], startIndex: number, origin: string): s
     description: c.description || '',
     ingredients: Array.isArray(c.ingredients)
       ? c.ingredients : String(c.ingredients).split(',').map(s => s.trim()),
-    price: c.price,
-    image_url: c.image_url || '',
-    video_url: c.video_url || '',
+    price:      c.price,
+    image_url:  c.image_url || '',
+    video_url:  c.video_url || '',
     card_color: c.card_color || '#0c0918',
+    scan_count: c.scan_count || 0,
   }));
 
   const f   = data[startIndex];
@@ -274,6 +288,8 @@ AFRAME.registerComponent('waikiki-events', {
       if(camst)  { camst.textContent = '✓ LOCKED'; camst.classList.add('locked'); }
       if(card) card.setAttribute('animation__popin',
         'property:scale; from:0 0 0; to:1 1 1; dur:450; easing:easeOutBack');
+      // Log scan
+      if (typeof logScan === 'function' && typeof DATA !== 'undefined') logScan(DATA[cur].slug);
       // Enable tap zone + show hint briefly
       var tz = document.getElementById('tapzone');
       if(tz) tz.style.pointerEvents = 'auto';
@@ -387,6 +403,11 @@ window.addEventListener('camera-error', function() {
               position="0 -1.10 0.092" align="center" color="#1a0510"
               width="1.6" font="exo2bold"></a-text>
 
+      <!-- Scan count (hidden when 0) -->
+      <a-text id="ar-scans" value="${f.scan_count ? f.scan_count + ' scans today' : ''}"
+              position="0 -1.38 0.092" align="center" color="#c29a53"
+              width="1.5"></a-text>
+
     </a-entity>
   </a-marker>
 
@@ -454,7 +475,10 @@ window.addEventListener('camera-error', function() {
     <div id="desc-ings-label">Ingredients</div>
     <div id="desc-ings"></div>
     <div id="desc-footer">
-      <div id="desc-price"></div>
+      <div>
+        <div id="desc-price"></div>
+        <div id="desc-scans" style="font-size:11px;font-weight:700;color:#c29a53;margin-top:4px"></div>
+      </div>
       <button id="desc-close" onclick="closeDesc()">Close &#10005;</button>
     </div>
   </div>
@@ -475,12 +499,28 @@ document.querySelector('a-scene').addEventListener('loaded', function() {
 });
 
 // ── Description sheet ────────────────────────────────────────────
+// Scan logging (throttled: same slug skipped within 30s)
+var _lastScanSlug = '', _lastScanTime = 0;
+function logScan(slug) {
+  var now = Date.now();
+  if (slug === _lastScanSlug && now - _lastScanTime < 30000) return;
+  _lastScanSlug = slug; _lastScanTime = now;
+  fetch('/api/ar-scan', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ slug: slug })
+  }).catch(function(){});
+  var c = DATA[cur];
+  if (c && c.slug === slug) { c.scan_count = (c.scan_count || 0) + 1; render(); }
+}
+
 function showDesc() {
   var c = DATA[cur];
   document.getElementById('desc-cat').textContent  = c.category;
   document.getElementById('desc-name').textContent = c.name;
   document.getElementById('desc-text').textContent = c.description || '';
   document.getElementById('desc-price').textContent = 'Rs. ' + c.price;
+  var ds = document.getElementById('desc-scans');
+  if (ds) ds.textContent = c.scan_count > 0 ? '🔥 ' + c.scan_count + ' scans today' : '';
   var el = document.getElementById('desc-ings');
   el.innerHTML = '';
   var ings = Array.isArray(c.ingredients) ? c.ingredients
@@ -573,6 +613,8 @@ function render() {
   document.getElementById('ar-name').setAttribute('value', c.name.toUpperCase());
   document.getElementById('ar-ings').setAttribute('value', ings);
   document.getElementById('ar-price').setAttribute('value', 'Rs. ' + c.price);
+  var scansEl = document.getElementById('ar-scans');
+  if (scansEl) scansEl.setAttribute('value', c.scan_count > 0 ? c.scan_count + ' scans today' : '');
 
   // Update HUD bottom bar
   document.getElementById('ciname').textContent = c.name;

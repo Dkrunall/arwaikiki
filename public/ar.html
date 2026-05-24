@@ -251,7 +251,10 @@
     <div class="desc-ings-label">Ingredients</div>
     <div id="desc-ings"></div>
     <div id="desc-footer">
-      <div id="desc-price"></div>
+      <div>
+        <div id="desc-price"></div>
+        <div id="desc-scans" style="font-size:11px;font-weight:700;color:#c29a53;margin-top:4px"></div>
+      </div>
       <button id="desc-close" onclick="closeDesc()">Close &#10005;</button>
     </div>
   </div>
@@ -375,6 +378,7 @@ function buildScene() {
     // Gold price pill
     '<a-plane width="0.88" height="0.28" color="#c29a53" opacity="0.92" position="0 -1.10 0.088"></a-plane>',
     '<a-text id="ar-price" value="…" position="0 -1.10 0.092" align="center" color="#1a0510" width="1.6" font="exo2bold"></a-text>',
+    '<a-text id="ar-scans" value="" position="0 -1.38 0.092" align="center" color="#c29a53" width="1.5"></a-text>',
   ].join('\n');
 
   // 4. Full scene HTML
@@ -411,12 +415,28 @@ function buildScene() {
 }
 
 // ── Description sheet ────────────────────────────────────────────
+// Scan logging (throttled: same slug skipped within 30s)
+var _lastScanSlug = '', _lastScanTime = 0;
+function logScan(slug) {
+  var now = Date.now();
+  if (slug === _lastScanSlug && now - _lastScanTime < 30000) return;
+  _lastScanSlug = slug; _lastScanTime = now;
+  fetch('/api/ar-scan', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ slug: slug })
+  }).catch(function(){});
+  var c = DATA[cur];
+  if (c && c.slug === slug) { c.scan_count = (c.scan_count || 0) + 1; render(); }
+}
+
 function showDesc() {
   var c = DATA[cur];
   document.getElementById('desc-cat').textContent  = c.category;
   document.getElementById('desc-name').textContent = c.name;
   document.getElementById('desc-text').textContent = c.description || '';
   document.getElementById('desc-price').textContent = 'Rs. ' + c.price;
+  var ds = document.getElementById('desc-scans');
+  if (ds) ds.textContent = c.scan_count > 0 ? '🔥 ' + c.scan_count + ' scans today' : '';
   var el = document.getElementById('desc-ings');
   el.innerHTML = '';
   var ings = Array.isArray(c.ingredients) ? c.ingredients
@@ -441,6 +461,8 @@ function onMarkerFound() {
   document.getElementById('scanarea').classList.add('hide');
   var cs = document.getElementById('camst');
   cs.textContent = '✓ LOCKED'; cs.classList.add('locked');
+  // Log scan
+  if (DATA[cur]) logScan(DATA[cur].slug);
   // Activate tap zone + show hint
   var tz = document.getElementById('tapzone');
   if(tz) tz.style.pointerEvents = 'auto';
@@ -540,6 +562,8 @@ function render() {
   if (name)  name.setAttribute('value', c.name.toUpperCase());
   if (ingEl) ingEl.setAttribute('value', ings);
   if (price) price.setAttribute('value', 'Rs. ' + c.price);
+  var scansEl = document.getElementById('ar-scans');
+  if (scansEl) scansEl.setAttribute('value', c.scan_count > 0 ? c.scan_count + ' scans today' : '');
 
   // Update HUD bottom bar
   document.getElementById('ciname').textContent = c.name;

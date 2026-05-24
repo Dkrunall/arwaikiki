@@ -4,7 +4,8 @@ import { createClient } from '@supabase/supabase-js';
 interface Cocktail {
   id: string; name: string; slug: string; category: string;
   description: string; ingredients: string[] | string;
-  price: number; image_url: string; video_url?: string; card_color: string; is_active: boolean;
+  price: number; image_url: string; video_url?: string; card_color: string;
+  is_active: boolean; scan_count?: number;
 }
 
 const MOCK: Cocktail[] = [
@@ -29,6 +30,8 @@ export async function GET(request: NextRequest) {
 
   let cocktails: Cocktail[] = [];
 
+  let scanCounts: Record<string, number> = {};
+
   if (slug === 'test' || slug === 'mock') {
     cocktails = MOCK;
   } else {
@@ -36,11 +39,18 @@ export async function GET(request: NextRequest) {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
-    const { data } = await sb
-      .from('cocktails').select('*')
-      .eq('is_active', true)
-      .order('created_at', { ascending: false });
-    cocktails = data || [];
+
+    const [cocktailRes, scanRes] = await Promise.all([
+      sb.from('cocktails').select('*').eq('is_active', true)
+        .order('created_at', { ascending: false }),
+      sb.from('cocktail_scans').select('cocktail_slug')
+        .gte('scanned_at', new Date(new Date().setHours(0, 0, 0, 0)).toISOString()),
+    ]);
+
+    cocktails = cocktailRes.data || [];
+    (scanRes.data || []).forEach((r: { cocktail_slug: string }) => {
+      scanCounts[r.cocktail_slug] = (scanCounts[r.cocktail_slug] || 0) + 1;
+    });
   }
 
   // Normalise ingredients to array
@@ -52,10 +62,11 @@ export async function GET(request: NextRequest) {
     ingredients: Array.isArray(c.ingredients)
       ? c.ingredients
       : String(c.ingredients).split(',').map(s => s.trim()),
-    price:     c.price,
-    image_url: c.image_url || '',
-    video_url: c.video_url || '',
+    price:      c.price,
+    image_url:  c.image_url || '',
+    video_url:  c.video_url || '',
     card_color: c.card_color || '#0c0918',
+    scan_count: scanCounts[c.slug] || 0,
   }));
 
   let startIndex = normalised.findIndex(c => c.slug === slug);
