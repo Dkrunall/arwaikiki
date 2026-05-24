@@ -252,10 +252,24 @@ ${tot <= 1 ? '.navbtn{opacity:.25;pointer-events:none}' : ''}
 #desc-footer{display:flex;justify-content:space-between;align-items:center;
   padding-top:16px;border-top:1px solid rgba(81,9,9,.1)}
 #desc-price{font-size:22px;font-weight:900;color:#510909}
-#desc-close{padding:12px 28px;background:#510909;color:#fcefd4;
+.desc-btns{display:flex;gap:8px}
+#share-btn{padding:12px 18px;background:rgba(194,154,83,.12);color:#7a5a1a;
+  font-weight:900;border:1px solid rgba(194,154,83,.45);border-radius:14px;
+  font-size:12px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;transition:background .15s}
+#share-btn:active{background:rgba(194,154,83,.28)}
+#desc-close{padding:12px 20px;background:#510909;color:#fcefd4;
   font-weight:900;border:none;border-radius:14px;font-size:12px;
   letter-spacing:.12em;text-transform:uppercase;cursor:pointer;
   -webkit-tap-highlight-color:transparent}
+/* Toast */
+#toast{position:fixed;bottom:140px;left:50%;transform:translateX(-50%);
+  z-index:600;background:rgba(10,10,20,.9);color:#fff;
+  font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;
+  padding:10px 22px;border-radius:20px;white-space:nowrap;
+  border:1px solid rgba(255,255,255,.12);
+  opacity:0;transition:opacity .3s;pointer-events:none}
+#toast.on{opacity:1}
 </style>
 </head>
 <body>
@@ -484,6 +498,9 @@ window.addEventListener('camera-error', function() {
 <!-- Swipe / tap hint pill -->
 <div id="taphint">&#8592; Swipe to browse &nbsp;&bull;&nbsp; Tap for info &#8594;</div>
 
+<!-- Toast notification -->
+<div id="toast"></div>
+
 <!-- Description bottom sheet -->
 <div id="descbg" onclick="if(event.target===this)closeDesc()">
   <div id="descsheet">
@@ -502,7 +519,10 @@ window.addEventListener('camera-error', function() {
         <div id="desc-price"></div>
         <div id="desc-scans" style="font-size:11px;font-weight:700;color:#c29a53;margin-top:4px"></div>
       </div>
-      <button id="desc-close" onclick="closeDesc()">Close &#10005;</button>
+      <div class="desc-btns">
+        <button id="share-btn" onclick="sharecocktail()">&#8679; Share</button>
+        <button id="desc-close" onclick="closeDesc()">Close &#10005;</button>
+      </div>
     </div>
   </div>
 </div>
@@ -522,6 +542,42 @@ document.querySelector('a-scene').addEventListener('loaded', function() {
 });
 
 // ── Description sheet ────────────────────────────────────────────
+// Toast + Share
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.add('on');
+  setTimeout(function(){ t.classList.remove('on'); }, 2400);
+}
+async function sharecocktail() {
+  var c = DATA[cur];
+  var shareUrl = window.location.origin + '/ar/' + c.slug;
+  var shareText = c.name + ' \u2014 ' + (c.description || c.category) + '
+
+Scan the Waikiki AR menu to see it come alive! \ud83c\udf79';
+  // Try with image (best for Instagram Stories / WhatsApp)
+  if (navigator.canShare) {
+    try {
+      var res = await fetch(c.image_url);
+      var blob = await res.blob();
+      var file = new File([blob], 'cocktail.jpg', { type: blob.type });
+      if (navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: c.name, text: shareText, url: shareUrl });
+        return;
+      }
+    } catch(e) {}
+  }
+  // Share without image
+  if (navigator.share) {
+    try { await navigator.share({ title: c.name, text: shareText, url: shareUrl }); return; }
+    catch(e) { return; }
+  }
+  // Desktop fallback: copy link
+  try { await navigator.clipboard.writeText(shareUrl); showToast('Link copied!'); }
+  catch(e) { showToast('Share: ' + shareUrl); }
+}
+
 // Scan logging (throttled: same slug skipped within 30s)
 var _lastScanSlug = '', _lastScanTime = 0;
 function logScan(slug) {
