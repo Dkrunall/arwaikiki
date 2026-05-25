@@ -183,7 +183,7 @@ export default function LandingPage() {
               <div className="absolute inset-[-4px] rounded-2xl bg-gradient-to-tr from-[#510909] to-[#c29a53] opacity-20 blur-md -z-10" />
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/markers/ar-menu-marker.svg"
+                src="/markers/pattern-ar-menu-marker.png"
                 alt="AR Menu Marker"
                 className="w-full h-full object-contain rounded-lg"
               />
