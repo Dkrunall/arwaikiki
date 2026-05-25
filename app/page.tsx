@@ -6,6 +6,7 @@ import { Cocktail } from '@/types/cocktail';
 import CocktailCard from '@/components/CocktailCard';
 import { Camera, Compass, ArrowRight, Download, Loader2, Sparkles, SlidersHorizontal } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const CATEGORIES = ['All', 'Signature', 'Classic', 'Mocktail', 'Special'];
 
@@ -179,13 +180,14 @@ export default function LandingPage() {
 
           <div className="rounded-3xl glass-premium p-8 flex flex-col items-center text-center">
             {/* Hiro Coaster Mockup Container */}
-            <div className="relative w-48 h-48 bg-white p-4 rounded-2xl shadow-xl mb-8 border border-[var(--brand-maroon)]/15 animate-floating flex items-center justify-center">
+            <div className="relative w-48 h-48 bg-white rounded-2xl shadow-xl mb-8 border border-[var(--brand-maroon)]/15 animate-floating">
               <div className="absolute inset-[-4px] rounded-2xl bg-gradient-to-tr from-[#510909] to-[#c29a53] opacity-20 blur-md -z-10" />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src="/markers/pattern-ar-menu-marker.png"
                 alt="AR Menu Marker"
-                className="w-full h-full object-contain rounded-lg"
+                fill
+                sizes="192px"
+                className="object-contain rounded-lg p-4"
               />
             </div>
 

@@ -5,6 +5,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Download, Printer, ExternalLink, QrCode } from 'lucide-react';
 import { Cocktail } from '@/types/cocktail';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface CocktailCardProps {
   cocktail: Cocktail;
@@ -203,22 +204,25 @@ export default function CocktailCard({ cocktail }: CocktailCardProps) {
 
       {/* Cocktail Image Frame */}
       <div className="flex-1 flex flex-col md:flex-row gap-6 items-center">
-        <div className="relative w-44 h-44 flex-shrink-0 bg-[var(--brand-maroon)]/5 rounded-2xl overflow-hidden border border-[var(--brand-maroon)]/10 flex items-center justify-center p-5 shadow-inner">
-          <div 
+        <div className="relative w-44 h-44 flex-shrink-0 bg-[var(--brand-maroon)]/5 rounded-2xl overflow-hidden border border-[var(--brand-maroon)]/10 shadow-inner">
+          <div
             className="absolute inset-0 opacity-10 blur-xl group-hover:opacity-30 transition-opacity duration-500"
             style={{ backgroundColor: cardColor }}
           />
           {cocktail.image_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={cocktail.image_url}
-              alt={cocktail.name}
-              className="w-full h-full object-contain drop-shadow-[0_12px_24px_rgba(81,9,9,0.3)] group-hover:scale-105 transition-transform duration-500 z-10"
-            />
+            <div className="absolute inset-5 z-10">
+              <Image
+                src={cocktail.image_url}
+                alt={cocktail.name}
+                fill
+                sizes="136px"
+                className="object-contain drop-shadow-[0_12px_24px_rgba(81,9,9,0.3)] group-hover:scale-105 transition-transform duration-500"
+              />
+            </div>
           ) : (
-            <div className="text-[var(--brand-maroon)]/40 text-xs font-bold uppercase tracking-wider">No Image</div>
+            <div className="absolute inset-0 flex items-center justify-center text-[var(--brand-maroon)]/40 text-xs font-bold uppercase tracking-wider">No Image</div>
           )}
-          <span 
+          <span
             className="absolute top-3 left-3 px-3 py-1 text-[9px] uppercase font-black rounded-lg tracking-wider text-[#fcefd4] z-20 shadow-lg"
             style={{ backgroundColor: cardColor }}
           >

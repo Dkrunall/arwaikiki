@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { rateLimit, getIp } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
+  if (!rateLimit(getIp(request), 30, 60_000)) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  }
+
   const body = await request.json().catch(() => ({}));
   const slug = body?.slug;
   if (!slug || typeof slug !== 'string') {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { rateLimit, getIp } from '@/lib/rate-limit';
 
 interface Cocktail {
   id: string; name: string; slug: string; category: string;
@@ -26,6 +27,10 @@ const MOCK: Cocktail[] = [
 ];
 
 export async function GET(request: NextRequest) {
+  if (!rateLimit(getIp(request), 60, 60_000)) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  }
+
   const slug = new URL(request.url).searchParams.get('slug') || '';
 
   let cocktails: Cocktail[] = [];
