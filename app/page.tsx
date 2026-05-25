@@ -183,24 +183,24 @@ export default function LandingPage() {
               <div className="absolute inset-[-4px] rounded-2xl bg-gradient-to-tr from-[#510909] to-[#c29a53] opacity-20 blur-md -z-10" />
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/markers/hiro.png"
-                alt="Hiro AR Marker"
+                src="/markers/ar-menu-marker.svg"
+                alt="AR Menu Marker"
                 className="w-full h-full object-contain rounded-lg"
               />
             </div>
 
-            <h3 className="text-xl font-display font-black text-[var(--brand-maroon)] mb-2.5 uppercase tracking-wide">Hiro Table Coaster</h3>
+            <h3 className="text-xl font-display font-black text-[var(--brand-maroon)] mb-2.5 uppercase tracking-wide">AR Menu Table Coaster</h3>
             <p className="text-xs text-[var(--brand-maroon)]/70 leading-relaxed mb-8 max-w-sm">
               The camera tracks this marker to place the virtual 3D cards directly on top of it. Print this and place it on your bar tables.
             </p>
 
             <a
-              href="/markers/hiro.png"
-              download="hiro-marker.png"
+              href="/print-marker.html"
+              target="_blank"
               className="w-full py-4 rounded-xl bg-white/40 border border-[var(--brand-maroon)]/15 hover:border-[var(--brand-maroon)] hover:bg-white/60 text-[var(--brand-maroon)] hover:text-[#510909] font-black uppercase text-xs tracking-wider transition-all duration-300 flex items-center justify-center gap-2.5 mb-6"
             >
               <Download size={15} className="stroke-[2.5]" />
-              <span>Download Coaster PDF</span>
+              <span>Print AR Menu Marker</span>
             </a>
 
             <div className="w-full text-left bg-white/30 border border-[var(--brand-maroon)]/10 p-5 rounded-2xl flex flex-col gap-4">
@@ -210,7 +210,7 @@ export default function LandingPage() {
               </p>
               <ol className="list-decimal pl-4 text-xs text-[var(--brand-maroon)]/80 flex flex-col gap-3">
                 <li>
-                  <span className="text-[var(--brand-maroon)] font-bold">Print the Coaster:</span> Print the Hiro marker onto cards or table coasters.
+                  <span className="text-[var(--brand-maroon)] font-bold">Print the Coaster:</span> Print the AR Menu marker onto cards or table coasters.
                 </li>
                 <li>
                   <span className="text-[var(--brand-maroon)] font-bold">Provide QR Codes:</span> Stand the print cards or menu lists beside the coasters.
