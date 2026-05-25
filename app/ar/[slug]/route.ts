@@ -120,13 +120,8 @@ function buildHTML(cocktails: Cocktail[], startIndex: number, origin: string): s
 <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{width:100%;height:100%;overflow:hidden;background:#000;
+body{margin:0;overflow:hidden;background:#000;
   font-family:'Helvetica Neue',Arial,sans-serif;-webkit-tap-highlight-color:transparent}
-canvas{background:transparent!important}
-video:not([src]){position:fixed!important;top:0!important;left:0!important;
-  width:100%!important;height:100%!important;object-fit:cover!important;z-index:0!important}
-a-scene,a-scene canvas{position:fixed!important;top:0!important;left:0!important;
-  width:100%!important;height:100%!important;z-index:1!important}
 
 
 /* ── Loading screen ──────────────────────────────────────── */
@@ -145,7 +140,7 @@ a-scene,a-scene canvas{position:fixed!important;top:0!important;left:0!important
 
 /* ── HUD layer (on top of A-Frame) ──────────────────────── */
 #hud{position:fixed;inset:0;z-index:100;
-  display:flex;flex-direction:column;pointer-events:none}
+  display:none;flex-direction:column;pointer-events:none}
 
 /* Top bar */
 #topbar{display:flex;align-items:center;justify-content:space-between;
@@ -546,7 +541,7 @@ document.querySelector('a-scene').addEventListener('loaded', function() {
   var ld = document.getElementById('ld');
   ld.classList.add('gone');
   setTimeout(function(){ ld.style.display = 'none'; }, 700);
-  // Clear WebGL canvas to transparent so the CSS camera video behind shows through
+  document.getElementById('hud').style.display = 'flex';
   if (this.renderer) this.renderer.setClearColor(0x000000, 0);
 });
 
