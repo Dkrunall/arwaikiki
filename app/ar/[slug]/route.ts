@@ -344,7 +344,7 @@ document.addEventListener('touchstart', playAllVideos, { once: true });
 // arjs-video-loaded → video appended to DOM, ready to scan
 window.addEventListener('arjs-video-loaded', function() {
   var s = document.getElementById('ldsub');
-  if(s){ s.textContent = 'Point at Hiro Coaster ↓'; s.style.color = ''; }
+  if(s){ s.textContent = 'Point at AR Menu Marker ↓'; s.style.color = ''; }
 });
 
 // Camera-error event → show actionable error instead of hanging spinner
@@ -368,7 +368,7 @@ window.addEventListener('camera-error', function() {
     ${assetTags}
   </a-assets>
 
-  <a-marker preset="hiro" id="marker" waikiki-events
+  <a-marker type="pattern" url="${origin}/markers/waikikiAR.patt" id="marker" waikiki-events
             smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
     <a-entity id="ar-card" rotation="-70 0 0" scale="0 0 0">
 
@@ -462,7 +462,7 @@ window.addEventListener('camera-error', function() {
       <div class="scan-inner-border"></div>
       <div id="sline"></div>
     </div>
-    <div id="scanlbl">Point at Hiro Coaster</div>
+    <div id="scanlbl">Point at AR Menu Marker</div>
     <div id="scansub">Hold 20&ndash;40 cm above &bull; Keep steady</div>
     <div id="tips" style="display:none;margin-top:20px;background:rgba(0,0,0,.55);
       backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
