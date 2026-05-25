@@ -125,6 +125,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;
 canvas{background:transparent!important}
 video:not([src]){position:fixed!important;top:0!important;left:0!important;
   width:100%!important;height:100%!important;object-fit:cover!important;z-index:0!important}
+a-scene,a-scene canvas{position:fixed!important;top:0!important;left:0!important;
+  width:100%!important;height:100%!important;z-index:1!important}
 
 
 /* ── Loading screen ──────────────────────────────────────── */
