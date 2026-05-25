@@ -640,77 +640,100 @@ function buildShareCard() {
   var ctx = canvas.getContext('2d');
   var W = 540, H = 960;
 
+  function pill(x, y, w, h, r, fill, stroke) {
+    roundPath(ctx, x, y, w, h, r);
+    if (fill)   { ctx.fillStyle = fill;   ctx.fill(); }
+    if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1.5; ctx.stroke(); }
+  }
+
   function draw(img) {
-    ctx.clearRect(0,0,W,H);
-    // Background
-    var bg = ctx.createLinearGradient(0,0,0,H);
+    ctx.clearRect(0, 0, W, H);
+
+    // Dark gradient background
+    var bg = ctx.createLinearGradient(0, 0, 0, H);
     bg.addColorStop(0, c.card_color || '#0c0918');
     bg.addColorStop(1, '#000000');
-    ctx.fillStyle = bg; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
 
-    // Cocktail image \u2014 cover-fit in rounded rect
-    var ix=30, iy=90, iw=W-60, ih=iw;
+    // Full-bleed image \u2014 top 60% of card
+    var imgH = 576;
     if (img) {
       ctx.save();
-      roundPath(ctx,ix,iy,iw,ih,24); ctx.clip();
-      var ar = img.naturalWidth/img.naturalHeight;
-      var dw,dh,dx,dy;
-      if (ar>1){ dh=ih; dw=dh*ar; dx=ix-(dw-iw)/2; dy=iy; }
-      else     { dw=iw; dh=dw/ar; dx=ix; dy=iy-(dh-ih)/2; }
-      ctx.drawImage(img,dx,dy,dw,dh);
+      ctx.beginPath(); ctx.rect(0, 0, W, imgH); ctx.clip();
+      var ar = img.naturalWidth / img.naturalHeight;
+      var dw, dh, dx, dy;
+      if (ar > W / imgH) { dh = imgH; dw = dh * ar; dx = (W - dw) / 2; dy = 0; }
+      else                { dw = W;   dh = dw / ar;  dx = 0; dy = (imgH - dh) / 2; }
+      ctx.drawImage(img, dx, dy, dw, dh);
       ctx.restore();
     }
 
-    // Text-area gradient overlay
-    var ov = ctx.createLinearGradient(0,iy+ih*0.45,0,H);
-    ov.addColorStop(0,'rgba(0,0,0,0)');
-    ov.addColorStop(0.4,'rgba(0,0,0,.78)');
-    ov.addColorStop(1,'rgba(0,0,0,.96)');
-    ctx.fillStyle=ov; ctx.fillRect(0,iy,W,H-iy);
+    // Scrim \u2014 fades image into dark content area
+    var ov = ctx.createLinearGradient(0, imgH * 0.28, 0, H);
+    ov.addColorStop(0,    'rgba(0,0,0,0)');
+    ov.addColorStop(0.25, 'rgba(0,0,0,0.68)');
+    ov.addColorStop(1,    'rgba(0,0,0,0.97)');
+    ctx.fillStyle = ov; ctx.fillRect(0, 0, W, H);
 
-    var ty = iy+ih+54;
-    ctx.textAlign='center';
+    ctx.textAlign = 'center';
 
-    // Brand label
-    ctx.fillStyle='#c29a53';
-    ctx.font='700 13px "Helvetica Neue",Arial,sans-serif';
-    ctx.fillText('WAIKIKI BAR & LOUNGE', W/2, ty);
+    // Brand badge \u2014 floats over top of image
+    var bw = 236, bh = 34, bx = W/2 - bw/2, by = 44;
+    pill(bx, by, bw, bh, 17, 'rgba(0,0,0,0.5)', 'rgba(194,154,83,0.5)');
+    ctx.fillStyle = '#c29a53';
+    ctx.font = '700 11px "Helvetica Neue",Arial,sans-serif';
+    ctx.fillText('WAIKIKI BAR & LOUNGE', W/2, by + 22);
 
-    // Category
-    ctx.fillStyle='rgba(194,154,83,.6)';
-    ctx.font='600 11px "Helvetica Neue",Arial,sans-serif';
-    ctx.fillText(c.category.toUpperCase(), W/2, ty+26);
+    // Category pill \u2014 sits just above image/text boundary
+    var catText = c.category.toUpperCase();
+    ctx.font = '700 11px "Helvetica Neue",Arial,sans-serif';
+    var cw = ctx.measureText(catText).width + 32;
+    var cy2 = imgH - 22;
+    pill(W/2 - cw/2, cy2, cw, 28, 14, 'rgba(194,154,83,0.18)', 'rgba(194,154,83,0.6)');
+    ctx.fillStyle = '#c29a53';
+    ctx.fillText(catText, W/2, cy2 + 19);
 
-    // Gold divider
-    ctx.strokeStyle='rgba(194,154,83,.3)'; ctx.lineWidth=1;
-    ctx.beginPath(); ctx.moveTo(W/2-70,ty+42); ctx.lineTo(W/2+70,ty+42); ctx.stroke();
+    // Cocktail name \u2014 auto-scales to fit width
+    var nameText = c.name.toUpperCase();
+    ctx.font = '900 58px "Helvetica Neue",Arial,sans-serif';
+    while (ctx.measureText(nameText).width > W - 56) {
+      var cur_size = parseInt(ctx.font.match(/(\d+)px/)[1]);
+      if (cur_size <= 28) break;
+      ctx.font = ctx.font.replace(/\d+px/, (cur_size - 2) + 'px');
+    }
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(nameText, W/2, imgH + 76);
 
-    // Name
-    ctx.fillStyle='#ffffff';
-    ctx.font='900 46px "Helvetica Neue",Arial,sans-serif';
-    ctx.fillText(c.name.toUpperCase(), W/2, ty+98);
+    // Gold divider rule
+    ctx.strokeStyle = 'rgba(194,154,83,0.35)'; ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(W/2 - 80, imgH + 96); ctx.lineTo(W/2 + 80, imgH + 96);
+    ctx.stroke();
 
-    // Ingredients
-    var ings=(Array.isArray(c.ingredients)?c.ingredients:[c.ingredients]).slice(0,3).join('  \u00b7  ');
-    ctx.fillStyle='rgba(255,255,255,.48)';
-    ctx.font='500 13px "Helvetica Neue",Arial,sans-serif';
-    ctx.fillText(ings, W/2, ty+132);
+    // Ingredients \u2014 up to 4, no price
+    var raw = Array.isArray(c.ingredients) ? c.ingredients : (c.ingredients ? [c.ingredients] : []);
+    var ings = raw.slice(0, 4).join('  \u00b7  ');
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    ctx.font = '400 13px "Helvetica Neue",Arial,sans-serif';
+    ctx.fillText(ings, W/2, imgH + 130);
 
-    // Price
-    ctx.fillStyle='#c29a53';
-    ctx.font='700 20px "Helvetica Neue",Arial,sans-serif';
-    ctx.fillText('Rs. '+c.price, W/2, ty+172);
+    // AR CTA badge
+    var ctaW = 290, ctaH = 46, ctaY = imgH + 174;
+    pill(W/2 - ctaW/2, ctaY, ctaW, ctaH, 23, 'rgba(194,154,83,0.1)', 'rgba(194,154,83,0.45)');
+    ctx.fillStyle = 'rgba(194,154,83,0.9)';
+    ctx.font = '700 11px "Helvetica Neue",Arial,sans-serif';
+    ctx.fillText('Scan QR to Experience in AR \u2736', W/2, ctaY + 27);
 
-    // AR CTA
-    ctx.fillStyle='rgba(255,255,255,.3)';
-    ctx.font='600 11px "Helvetica Neue",Arial,sans-serif';
-    ctx.fillText('\u2736  Scan QR to experience in AR  \u2736', W/2, ty+206);
+    // Watermark
+    ctx.fillStyle = 'rgba(255,255,255,0.18)';
+    ctx.font = '400 10px "Helvetica Neue",Arial,sans-serif';
+    ctx.fillText('arwaikiki.vercel.app', W/2, H - 30);
   }
 
   var imgEl = new Image();
-  imgEl.crossOrigin='anonymous';
-  imgEl.onload  = function(){ draw(imgEl); };
-  imgEl.onerror = function(){ draw(null); };
+  imgEl.crossOrigin = 'anonymous';
+  imgEl.onload  = function() { draw(imgEl); };
+  imgEl.onerror = function() { draw(null);  };
   imgEl.src = c.image_url;
 }
 
