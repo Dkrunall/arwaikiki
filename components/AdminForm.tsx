@@ -21,9 +21,12 @@ export default function AdminForm({ initialData, onSave, onCancel }: AdminFormPr
   const [isActive, setIsActive] = useState(true);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState('');
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoUrl, setVideoUrl] = useState('');
 
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
@@ -41,6 +44,7 @@ export default function AdminForm({ initialData, onSave, onCancel }: AdminFormPr
       setCardColor(initialData.card_color || '#c29a53');
       setIsActive(initialData.is_active);
       setImageUrl(initialData.image_url || '');
+      setVideoUrl(initialData.video_url || '');
     } else {
       resetForm();
     }
@@ -56,6 +60,8 @@ export default function AdminForm({ initialData, onSave, onCancel }: AdminFormPr
     setIsActive(true);
     setImageFile(null);
     setImageUrl('');
+    setVideoFile(null);
+    setVideoUrl('');
     setErrorMsg('');
     setSuccessMsg('');
   };
@@ -68,6 +74,18 @@ export default function AdminForm({ initialData, onSave, onCancel }: AdminFormPr
         return;
       }
       setImageFile(file);
+      setErrorMsg('');
+    }
+  };
+
+  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      if (!file.type.startsWith('video/')) {
+        setErrorMsg('Please select a valid video file (MP4 recommended).');
+        return;
+      }
+      setVideoFile(file);
       setErrorMsg('');
     }
   };
@@ -94,6 +112,7 @@ export default function AdminForm({ initialData, onSave, onCancel }: AdminFormPr
       }
 
       let finalImageUrl = imageUrl;
+      let finalVideoUrl = videoUrl;
 
       // 2. Upload image to Supabase Storage if a new file is chosen
       if (imageFile) {
@@ -104,19 +123,31 @@ export default function AdminForm({ initialData, onSave, onCancel }: AdminFormPr
 
         const { error: uploadError } = await supabase.storage
           .from('cocktail-images')
-          .upload(filePath, imageFile, {
-            cacheControl: '3600',
-            upsert: true,
-          });
+          .upload(filePath, imageFile, { cacheControl: '3600', upsert: true });
 
-        if (uploadError) {
-          throw uploadError;
-        }
+        if (uploadError) throw uploadError;
 
-        // Get public URL
         const { data } = supabase.storage.from('cocktail-images').getPublicUrl(filePath);
         finalImageUrl = data.publicUrl;
         setUploading(false);
+      }
+
+      // 3. Upload video to Supabase Storage if a new file is chosen
+      if (videoFile) {
+        setUploadingVideo(true);
+        const fileExt = videoFile.name.split('.').pop();
+        const fileName = `${slug}-${Date.now()}.${fileExt}`;
+        const filePath = `public/${fileName}`;
+
+        const { error: videoUploadError } = await supabase.storage
+          .from('cocktail-videos')
+          .upload(filePath, videoFile, { cacheControl: '3600', upsert: true });
+
+        if (videoUploadError) throw videoUploadError;
+
+        const { data } = supabase.storage.from('cocktail-videos').getPublicUrl(filePath);
+        finalVideoUrl = data.publicUrl;
+        setUploadingVideo(false);
       }
 
       // Convert ingredients text to array
@@ -133,6 +164,7 @@ export default function AdminForm({ initialData, onSave, onCancel }: AdminFormPr
         ingredients,
         price: parseFloat(price),
         image_url: finalImageUrl,
+        video_url: finalVideoUrl || null,
         card_color: cardColor,
         is_active: isActive,
       };
@@ -177,6 +209,7 @@ export default function AdminForm({ initialData, onSave, onCancel }: AdminFormPr
     } finally {
       setLoading(false);
       setUploading(false);
+      setUploadingVideo(false);
     }
   };
 
@@ -388,6 +421,51 @@ export default function AdminForm({ initialData, onSave, onCancel }: AdminFormPr
         </div>
       </div>
 
+      {/* Video upload */}
+      <div className="flex flex-col gap-2 relative z-10">
+        <label className="text-[10px] font-black text-[var(--brand-maroon)]/70 uppercase tracking-widest flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#c29a53]" />
+          AR Video (MP4) <span className="text-[var(--brand-maroon)]/40 normal-case font-medium tracking-normal">— optional, shown on AR card</span>
+        </label>
+        <div className="flex items-center gap-5 p-5 rounded-2xl border border-dashed border-[var(--brand-maroon)]/15 bg-white/10 hover:bg-white/20 transition-all">
+          <label className="flex flex-col items-center justify-center w-24 h-24 bg-white/20 hover:bg-white/40 border border-[var(--brand-maroon)]/10 hover:border-[var(--brand-maroon)]/30 rounded-xl cursor-pointer transition-all text-[var(--brand-maroon)] shrink-0 group">
+            <Upload size={22} className="mb-1 text-[var(--brand-maroon)]/70 group-hover:scale-110 transition-transform" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-[var(--brand-maroon)]/85">Choose MP4</span>
+            <input type="file" accept="video/mp4,video/*" onChange={handleVideoChange} className="hidden" />
+          </label>
+
+          <div className="flex-1 min-w-0">
+            {uploadingVideo ? (
+              <div className="flex items-center gap-2">
+                <Loader2 size={14} className="animate-spin text-[var(--brand-maroon)]" />
+                <span className="text-xs font-black text-[var(--brand-maroon)] uppercase tracking-wider">Uploading video…</span>
+              </div>
+            ) : videoFile ? (
+              <div>
+                <p className="text-xs font-black text-[var(--brand-maroon)] truncate uppercase tracking-wide">{videoFile.name}</p>
+                <p className="text-[10px] text-[var(--brand-maroon)]/55 font-mono mt-0.5">{(videoFile.size / (1024 * 1024)).toFixed(1)} MB — Ready to upload</p>
+              </div>
+            ) : videoUrl ? (
+              <div>
+                <p className="text-xs text-[var(--brand-maroon)]/70 truncate font-mono">{videoUrl.split('/').pop()}</p>
+                <p className="text-[10px] text-[var(--brand-maroon)] font-black uppercase tracking-widest flex items-center gap-1 mt-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--brand-maroon)] animate-pulse" />
+                  Video Linked
+                </p>
+                <button type="button" onClick={() => setVideoUrl('')} className="text-[10px] text-red-500 font-black uppercase tracking-wider mt-1 hover:underline">
+                  Remove
+                </button>
+              </div>
+            ) : (
+              <div>
+                <p className="text-xs font-bold text-[var(--brand-maroon)]/60">Upload an MP4 to show on the AR card</p>
+                <p className="text-[10px] text-[var(--brand-maroon)]/50 mt-1 uppercase tracking-wider">Recommended: portrait, under 20 MB</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Switch active toggle */}
       <div className="flex items-center justify-between p-4.5 rounded-2xl bg-white/20 border border-[var(--brand-maroon)]/10 w-full relative z-10 mt-2">
         <div className="flex flex-col gap-0.5">
@@ -422,7 +500,7 @@ export default function AdminForm({ initialData, onSave, onCancel }: AdminFormPr
         )}
         <button
           type="submit"
-          disabled={loading || uploading}
+          disabled={loading || uploading || uploadingVideo}
           className="px-6 py-3.5 rounded-xl bg-[var(--brand-maroon)] text-[#fcefd4] hover:bg-[#6c1010] font-black uppercase tracking-widest text-xs active:scale-98 transition-all flex items-center justify-center gap-2.5 shadow-lg shadow-[var(--brand-maroon)]/15 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading || uploading ? (
