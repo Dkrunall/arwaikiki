@@ -12,9 +12,10 @@ import {
 import Link from 'next/link';
 
 export default function AdminPage() {
-  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null); // null = checking
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
   const [cocktails, setCocktails] = useState<Cocktail[]>([]);
   const [loading, setLoading] = useState(false);
   const [editingCocktail, setEditingCocktail] = useState<Cocktail | null>(null);
@@ -25,12 +26,9 @@ export default function AdminPage() {
   const activeCocktails = cocktails.filter(c => c.is_active).length;
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const authState = sessionStorage.getItem('waikiki_admin_auth');
-      if (authState === 'true') {
-        setIsAuthorized(true);
-      }
-    }
+    fetch('/api/admin/check')
+      .then(r => r.ok ? setIsAuthorized(true) : setIsAuthorized(false))
+      .catch(() => setIsAuthorized(false));
   }, []);
 
   useEffect(() => {
@@ -39,21 +37,32 @@ export default function AdminPage() {
     }
   }, [isAuthorized]);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const envPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'waikiki2026';
-    if (password === envPassword) {
-      setIsAuthorized(true);
-      sessionStorage.setItem('waikiki_admin_auth', 'true');
-      setAuthError('');
-    } else {
-      setAuthError('Incorrect admin password. Please try again.');
+    setAuthLoading(true);
+    setAuthError('');
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+      if (res.ok) {
+        setIsAuthorized(true);
+        setPassword('');
+      } else {
+        setAuthError('Incorrect admin password. Please try again.');
+      }
+    } catch {
+      setAuthError('Network error. Please try again.');
+    } finally {
+      setAuthLoading(false);
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await fetch('/api/admin/logout', { method: 'POST' });
     setIsAuthorized(false);
-    sessionStorage.removeItem('waikiki_admin_auth');
     setPassword('');
   };
 
@@ -130,6 +139,14 @@ export default function AdminPage() {
     document.body.removeChild(trigger);
   };
 
+  if (isAuthorized === null) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[var(--background)]">
+        <Loader2 size={32} className="animate-spin text-[var(--brand-maroon)]" />
+      </div>
+    );
+  }
+
   if (!isAuthorized) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[var(--background)] p-6 text-[var(--foreground)] relative overflow-hidden font-sans">
@@ -161,10 +178,10 @@ export default function AdminPage() {
             )}
             <button
               type="submit"
-              className="w-full mt-2 py-4 rounded-2xl bg-[var(--brand-maroon)] text-[#fcefd4] font-black uppercase tracking-wider hover:bg-[#6c1010] active:scale-98 transition-all flex items-center justify-center gap-2.5 shadow-lg shadow-[var(--brand-maroon)]/15 cursor-pointer"
+              disabled={authLoading}
+              className="w-full mt-2 py-4 rounded-2xl bg-[var(--brand-maroon)] text-[#fcefd4] font-black uppercase tracking-wider hover:bg-[#6c1010] active:scale-98 transition-all flex items-center justify-center gap-2.5 shadow-lg shadow-[var(--brand-maroon)]/15 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              <span>Unlock Gateway</span>
-              <ArrowRight size={16} className="stroke-[2.5]" />
+              {authLoading ? <Loader2 size={16} className="animate-spin" /> : <><span>Unlock Gateway</span><ArrowRight size={16} className="stroke-[2.5]" /></>}
             </button>
           </form>
           <Link href="/" className="mt-8 text-xs text-[var(--brand-maroon)]/60 hover:text-[var(--brand-maroon)] transition-colors uppercase font-black tracking-wider">
