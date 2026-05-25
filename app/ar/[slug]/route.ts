@@ -100,7 +100,7 @@ function buildHTML(cocktails: Cocktail[], startIndex: number, origin: string): s
   // Pre-load assets — video element if video_url present, otherwise img
   const assetTags = data.map((c, i) =>
     c.video_url
-      ? `<video id="ci${i}" src="${esc(c.video_url)}" autoplay loop muted playsinline crossorigin="anonymous"></video>`
+      ? `<video id="ci${i}" src="${esc(c.video_url)}" autoplay loop muted playsinline preload="auto" webkit-playsinline crossorigin="anonymous"></video>`
       : `<img id="ci${i}" src="${esc(c.image_url)}" crossorigin="anonymous"/>`
   ).join('\n    ');
 
@@ -536,6 +536,11 @@ var DATA = ${safeData};
 var cur  = ${startIndex};
 var tot  = ${tot};
 
+// canplay fallback: play each video as soon as it has buffered enough data
+document.querySelectorAll('a-assets video').forEach(function(v) {
+  v.addEventListener('canplay', function() { v.play().catch(function(){}); });
+});
+
 // Dismiss loading when A-Frame scene finishes setup
 document.querySelector('a-scene').addEventListener('loaded', function() {
   var ld = document.getElementById('ld');
@@ -543,6 +548,7 @@ document.querySelector('a-scene').addEventListener('loaded', function() {
   setTimeout(function(){ ld.style.display = 'none'; }, 700);
   document.getElementById('hud').style.display = 'flex';
   if (this.renderer) this.renderer.setClearColor(0x000000, 0);
+  playAllVideos();
 });
 
 // ── Description sheet ────────────────────────────────────────────
