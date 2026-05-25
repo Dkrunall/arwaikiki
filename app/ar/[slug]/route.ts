@@ -117,7 +117,7 @@ function buildHTML(cocktails: Cocktail[], startIndex: number, origin: string): s
 <title>Waikiki AR</title>
 <!-- Exact CDN combo from official AR.js docs/examples -->
 <script src="https://cdn.jsdelivr.net/gh/aframevr/aframe@1.6.0/dist/aframe-master.min.js"></script>
-<script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{margin:0;overflow:hidden;background:#000;
