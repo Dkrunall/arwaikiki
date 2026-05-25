@@ -2,24 +2,27 @@
   <!-- White margin — AR.js needs white space outside the border -->
   <rect width="632" height="632" fill="white"/>
 
-  <!-- Black border — maximum contrast for any lighting -->
-  <rect x="60" y="60" width="512" height="512" fill="#000000"/>
+  <!-- Brand color border -->
+  <rect x="60" y="60" width="512" height="512" fill="#510909"/>
 
   <!-- Inner white content area -->
   <rect x="130" y="130" width="372" height="372" fill="white"/>
 
-  <!-- Bowl: wide inverted triangle (pure black for any lighting) -->
-  <polygon points="208,160 424,160 316,270" fill="#000000"/>
+  <!-- Bowl: wide inverted triangle -->
+  <polygon points="208,160 424,160 316,270" fill="#510909"/>
 
-  <!-- Stem: widened to 34 px so it reliably registers in AR tracking -->
-  <rect x="299" y="270" width="34" height="88" fill="#000000"/>
+  <!-- Liquid highlight inside bowl -->
+  <polygon points="208,160 424,160 370,210 262,210" fill="#7a1212"/>
 
-  <!-- Base foot: widened for bold detection -->
-  <rect x="236" y="358" width="160" height="18" fill="#000000"/>
+  <!-- Stem -->
+  <rect x="309" y="270" width="14" height="88" fill="#510909"/>
+
+  <!-- Base foot -->
+  <rect x="258" y="358" width="116" height="14" fill="#510909"/>
 
   <!-- Olive/cherry on rim + asymmetry stick -->
-  <circle cx="400" cy="156" r="14" fill="#000000"/>
-  <rect x="398" y="136" width="4" height="20" fill="#000000"/>
+  <circle cx="400" cy="156" r="14" fill="#510909"/>
+  <rect x="398" y="136" width="4" height="20" fill="#510909"/>
 
   <!-- AR MENU text -->
   <text
@@ -28,13 +31,13 @@
     font-weight="900"
     font-size="48"
     text-anchor="middle"
-    fill="#000000"
+    fill="#510909"
     letter-spacing="3"
   >AR MENU</text>
 
   <!-- Decorative line under text -->
-  <rect x="178" y="428" width="276" height="5" fill="#000000"/>
+  <rect x="178" y="428" width="276" height="5" fill="#510909"/>
 
   <!-- Asymmetry dot — tells AR.js which way is up -->
-  <rect x="418" y="442" width="20" height="20" fill="#000000"/>
+  <rect x="418" y="442" width="20" height="20" fill="#510909"/>
 </svg>
