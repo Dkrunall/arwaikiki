@@ -723,9 +723,9 @@ function getCanvasBlob() {
 function doShareWA() {
   var c = DATA[cur];
   var url = window.location.origin+'/ar/'+c.slug;
-  var msg = '\ud83c\udf79 *'+c.name+'* from Waikiki Bar!\n'
-    +(c.description?c.description+'\n':'')+
-    '\nScan the AR Menu to see it come alive in 3D \ud83d\udd2e\n'+url;
+  var msg = '\ud83c\udf79 *'+c.name+'* from Waikiki Bar!\\n'
+    +(c.description?c.description+'\\n':'')+
+    '\\nScan the AR Menu to see it come alive in 3D \ud83d\udd2e\\n'+url;
   window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
 }
 
