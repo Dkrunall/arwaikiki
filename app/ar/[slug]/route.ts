@@ -122,9 +122,7 @@ function buildHTML(cocktails: Cocktail[], startIndex: number, origin: string): s
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{width:100%;height:100%;overflow:hidden;background:#000;
   font-family:'Helvetica Neue',Arial,sans-serif;-webkit-tap-highlight-color:transparent}
-canvas{background:transparent!important}
-#arjs-video{position:fixed!important;top:0!important;left:0!important;
-  width:100%!important;height:100%!important;object-fit:cover!important;z-index:0!important}
+
 
 /* ── Loading screen ──────────────────────────────────────── */
 #ld{position:fixed;inset:0;z-index:9999;background:#060212;
