@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- White background -->
+  <rect width="512" height="512" fill="white"/>
+
+  <!-- Border in brand color -->
+  <rect x="0" y="0" width="512" height="512" fill="#510909"/>
+  <rect x="70" y="70" width="372" height="372" fill="white"/>
+
+  <!-- Bowl: wide inverted triangle -->
+  <polygon points="148,100 364,100 256,210" fill="#510909"/>
+
+  <!-- Liquid highlight inside bowl (top portion) -->
+  <polygon points="148,100 364,100 310,150 202,150" fill="#7a1212"/>
+
+  <!-- Stem -->
+  <rect x="249" y="210" width="14" height="88" fill="#510909"/>
+
+  <!-- Base foot -->
+  <rect x="198" y="298" width="116" height="14" fill="#510909"/>
+
+  <!-- Olive/cherry on rim (asymmetry marker + decoration) -->
+  <circle cx="340" cy="96" r="14" fill="#510909"/>
+  <rect x="338" y="76" width="4" height="20" fill="#510909"/>
+
+  <!-- AR MENU text -->
+  <text
+    x="256" y="358"
+    font-family="Arial Black, Arial, sans-serif"
+    font-weight="900"
+    font-size="48"
+    text-anchor="middle"
+    fill="#510909"
+    letter-spacing="3"
+  >AR MENU</text>
+
+  <!-- Decorative line under text -->
+  <rect x="118" y="368" width="276" height="5" fill="#510909"/>
+
+  <!-- Asymmetry dot bottom-right (required for AR.js orientation detection) -->
+  <rect x="358" y="382" width="20" height="20" fill="#510909"/>
+
+</svg>
