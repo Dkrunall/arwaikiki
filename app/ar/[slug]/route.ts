@@ -67,7 +67,10 @@ export async function GET(
   const origin = new URL(request.url).origin;
 
   return new NextResponse(buildHTML(cocktailsWithCounts, startIndex, origin), {
-    headers: { 'Content-Type': 'text/html; charset=utf-8' },
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Permissions-Policy': 'camera=*, microphone=*',
+    },
   });
 }
 
@@ -119,6 +122,9 @@ function buildHTML(cocktails: Cocktail[], startIndex: number, origin: string): s
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{width:100%;height:100%;overflow:hidden;background:#000;
   font-family:'Helvetica Neue',Arial,sans-serif;-webkit-tap-highlight-color:transparent}
+canvas{background:transparent!important}
+#arjs-video,video[autoplay]{position:fixed!important;top:0!important;left:0!important;
+  width:100%!important;height:100%!important;object-fit:cover!important;z-index:0!important}
 
 /* ── Loading screen ──────────────────────────────────────── */
 #ld{position:fixed;inset:0;z-index:9999;background:#060212;
@@ -363,7 +369,7 @@ window.addEventListener('camera-error', function() {
 </script>
 
 <!-- Minimal a-scene exactly matching official AR.js examples -->
-<a-scene embedded arjs='sourceType: webcam; debugUIEnabled: false;' renderer='precision: medium; alpha: true; logarithmicDepthBuffer: true; antialias: true;'>
+<a-scene embedded arjs='sourceType: webcam; debugUIEnabled: false;' renderer='precision: medium; alpha: true; logarithmicDepthBuffer: true; antialias: true;' vr-mode-ui='enabled: false'>
   <a-assets timeout="8000">
     ${assetTags}
   </a-assets>
