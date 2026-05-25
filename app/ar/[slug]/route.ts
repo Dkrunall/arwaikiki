@@ -274,6 +274,36 @@ ${tot <= 1 ? '.navbtn{opacity:.25;pointer-events:none}' : ''}
   border:1px solid rgba(255,255,255,.12);
   opacity:0;transition:opacity .3s;pointer-events:none}
 #toast.on{opacity:1}
+
+/* ── Share bottom sheet ──────────────────────────────────── */
+#sharebg{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.72);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  display:none;align-items:flex-end;justify-content:center}
+#sharebg.on{display:flex}
+#sharesheet2{background:#100820;border-radius:28px 28px 0 0;
+  padding:20px 20px 48px;width:100%;max-width:520px;
+  transform:translateY(100%);
+  transition:transform .38s cubic-bezier(.34,1.56,.64,1)}
+#sharebg.on #sharesheet2{transform:translateY(0)}
+#sh-handle{width:40px;height:4px;background:rgba(255,255,255,.18);
+  border-radius:2px;margin:0 auto 16px}
+#sh-title{font-size:11px;font-weight:900;text-transform:uppercase;
+  letter-spacing:.2em;color:rgba(255,255,255,.38);text-align:center;margin-bottom:18px}
+#sh-card-wrap{display:flex;justify-content:center;margin-bottom:20px}
+#share-canvas{border-radius:14px;width:130px;height:231px;
+  box-shadow:0 8px 32px rgba(0,0,0,.65);display:block;object-fit:cover}
+#sh-btns{display:flex;flex-direction:column;gap:10px}
+.shopt{display:flex;align-items:center;gap:14px;padding:15px 18px;
+  border-radius:16px;border:none;cursor:pointer;font-weight:900;font-size:13px;
+  letter-spacing:.05em;text-transform:uppercase;width:100%;text-align:left;
+  -webkit-tap-highlight-color:transparent;transition:opacity .12s,transform .1s}
+.shopt:active{opacity:.78;transform:scale(.98)}
+.shopt svg{width:22px;height:22px;flex-shrink:0}
+.shopt-wa{background:#25D366;color:#fff}
+.shopt-ig{background:radial-gradient(circle at 28% 110%,#fdf497 0%,#fd5949 40%,#d6249f 65%,#285AEB 90%);color:#fff}
+.shopt-copy{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.12)}
+.shopt-close{background:transparent;color:rgba(255,255,255,.32);
+  justify-content:center;font-size:11px;padding:10px;letter-spacing:.15em}
 </style>
 </head>
 <body>
@@ -505,6 +535,32 @@ window.addEventListener('camera-error', function() {
 <!-- Toast notification -->
 <div id="toast"></div>
 
+<!-- Share bottom sheet (Spotify-style card) -->
+<div id="sharebg" onclick="if(event.target===this)closeShare()">
+  <div id="sharesheet2">
+    <div id="sh-handle"></div>
+    <div id="sh-title">Share This Cocktail</div>
+    <div id="sh-card-wrap">
+      <canvas id="share-canvas" width="540" height="960"></canvas>
+    </div>
+    <div id="sh-btns">
+      <button class="shopt shopt-wa" onclick="doShareWA()">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+        WhatsApp
+      </button>
+      <button class="shopt shopt-ig" onclick="doShareIG()">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+        Instagram Story
+      </button>
+      <button class="shopt shopt-copy" onclick="doShareCopy()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+        Copy Link
+      </button>
+      <button class="shopt shopt-close" onclick="closeShare()">Close &#10005;</button>
+    </div>
+  </div>
+</div>
+
 <!-- Description bottom sheet -->
 <div id="descbg" onclick="if(event.target===this)closeDesc()">
   <div id="descsheet">
@@ -524,7 +580,7 @@ window.addEventListener('camera-error', function() {
         <div id="desc-scans" style="font-size:11px;font-weight:700;color:#c29a53;margin-top:4px"></div>
       </div>
       <div class="desc-btns">
-        <button id="share-btn" onclick="sharecocktail()">&#8679; Share</button>
+        <button id="share-btn" onclick="openShare()">&#8679; Share</button>
         <button id="desc-close" onclick="closeDesc()">Close &#10005;</button>
       </div>
     </div>
@@ -560,28 +616,139 @@ function showToast(msg) {
   t.classList.add('on');
   setTimeout(function(){ t.classList.remove('on'); }, 2400);
 }
-async function sharecocktail() {
+// \u2500\u2500 Share modal \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+function openShare() {
+  buildShareCard();
+  document.getElementById('sharebg').classList.add('on');
+}
+function closeShare() {
+  document.getElementById('sharebg').classList.remove('on');
+}
+
+function roundPath(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y);
+  ctx.quadraticCurveTo(x+w,y,x+w,y+r); ctx.lineTo(x+w,y+h-r);
+  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h); ctx.lineTo(x+r,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-r); ctx.lineTo(x,y+r);
+  ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath();
+}
+
+function buildShareCard() {
   var c = DATA[cur];
-  var shareUrl = window.location.origin + '/ar/' + c.slug;
-  var shareTitle = c.name + ' | Waikiki Bar';
-  var shareText  = c.name + ' \u2014 ' + (c.description || c.category) + ' Scan the Waikiki AR menu to see it come alive!';
-  if (navigator.canShare) {
-    try {
-      var res = await fetch(c.image_url);
-      var blob = await res.blob();
-      var file = new File([blob], 'cocktail.jpg', { type: blob.type });
-      if (navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: shareTitle, text: shareText, url: shareUrl });
-        return;
-      }
-    } catch(e) {}
+  var canvas = document.getElementById('share-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = 540, H = 960;
+
+  function draw(img) {
+    ctx.clearRect(0,0,W,H);
+    // Background
+    var bg = ctx.createLinearGradient(0,0,0,H);
+    bg.addColorStop(0, c.card_color || '#0c0918');
+    bg.addColorStop(1, '#000000');
+    ctx.fillStyle = bg; ctx.fillRect(0,0,W,H);
+
+    // Cocktail image \u2014 cover-fit in rounded rect
+    var ix=30, iy=90, iw=W-60, ih=iw;
+    if (img) {
+      ctx.save();
+      roundPath(ctx,ix,iy,iw,ih,24); ctx.clip();
+      var ar = img.naturalWidth/img.naturalHeight;
+      var dw,dh,dx,dy;
+      if (ar>1){ dh=ih; dw=dh*ar; dx=ix-(dw-iw)/2; dy=iy; }
+      else     { dw=iw; dh=dw/ar; dx=ix; dy=iy-(dh-ih)/2; }
+      ctx.drawImage(img,dx,dy,dw,dh);
+      ctx.restore();
+    }
+
+    // Text-area gradient overlay
+    var ov = ctx.createLinearGradient(0,iy+ih*0.45,0,H);
+    ov.addColorStop(0,'rgba(0,0,0,0)');
+    ov.addColorStop(0.4,'rgba(0,0,0,.78)');
+    ov.addColorStop(1,'rgba(0,0,0,.96)');
+    ctx.fillStyle=ov; ctx.fillRect(0,iy,W,H-iy);
+
+    var ty = iy+ih+54;
+    ctx.textAlign='center';
+
+    // Brand label
+    ctx.fillStyle='#c29a53';
+    ctx.font='700 13px "Helvetica Neue",Arial,sans-serif';
+    ctx.fillText('WAIKIKI BAR & LOUNGE', W/2, ty);
+
+    // Category
+    ctx.fillStyle='rgba(194,154,83,.6)';
+    ctx.font='600 11px "Helvetica Neue",Arial,sans-serif';
+    ctx.fillText(c.category.toUpperCase(), W/2, ty+26);
+
+    // Gold divider
+    ctx.strokeStyle='rgba(194,154,83,.3)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(W/2-70,ty+42); ctx.lineTo(W/2+70,ty+42); ctx.stroke();
+
+    // Name
+    ctx.fillStyle='#ffffff';
+    ctx.font='900 46px "Helvetica Neue",Arial,sans-serif';
+    ctx.fillText(c.name.toUpperCase(), W/2, ty+98);
+
+    // Ingredients
+    var ings=(Array.isArray(c.ingredients)?c.ingredients:[c.ingredients]).slice(0,3).join('  \u00b7  ');
+    ctx.fillStyle='rgba(255,255,255,.48)';
+    ctx.font='500 13px "Helvetica Neue",Arial,sans-serif';
+    ctx.fillText(ings, W/2, ty+132);
+
+    // Price
+    ctx.fillStyle='#c29a53';
+    ctx.font='700 20px "Helvetica Neue",Arial,sans-serif';
+    ctx.fillText('Rs. '+c.price, W/2, ty+172);
+
+    // AR CTA
+    ctx.fillStyle='rgba(255,255,255,.3)';
+    ctx.font='600 11px "Helvetica Neue",Arial,sans-serif';
+    ctx.fillText('\u2736  Scan QR to experience in AR  \u2736', W/2, ty+206);
   }
-  if (navigator.share) {
-    try { await navigator.share({ title: shareTitle, text: shareText, url: shareUrl }); return; }
-    catch(e) { return; }
+
+  var imgEl = new Image();
+  imgEl.crossOrigin='anonymous';
+  imgEl.onload  = function(){ draw(imgEl); };
+  imgEl.onerror = function(){ draw(null); };
+  imgEl.src = c.image_url;
+}
+
+function getCanvasBlob() {
+  return new Promise(function(res) {
+    document.getElementById('share-canvas').toBlob(function(b){ res(b); },'image/jpeg',0.92);
+  });
+}
+
+function doShareWA() {
+  var c = DATA[cur];
+  var url = window.location.origin+'/ar/'+c.slug;
+  var msg = '\ud83c\udf79 *'+c.name+'* from Waikiki Bar!\n'
+    +(c.description?c.description+'\n':'')+
+    '\nScan the AR Menu to see it come alive in 3D \ud83d\udd2e\n'+url;
+  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+}
+
+async function doShareIG() {
+  var blob = await getCanvasBlob();
+  var file = new File([blob],'waikiki-'+DATA[cur].slug+'.jpg',{type:'image/jpeg'});
+  if (navigator.canShare && navigator.canShare({files:[file]})) {
+    try { await navigator.share({files:[file],title:DATA[cur].name+' | Waikiki'}); return; }
+    catch(e){ if(e.name==='AbortError') return; }
   }
-  try { await navigator.clipboard.writeText(shareUrl); showToast('Link copied!'); }
-  catch(e) { showToast('Share: ' + shareUrl); }
+  // Fallback: download the card so user can share from gallery
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'waikiki-'+DATA[cur].slug+'.jpg';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 3000);
+  showToast('Image saved \u2014 share from your gallery!');
+}
+
+async function doShareCopy() {
+  var url = window.location.origin+'/ar/'+DATA[cur].slug;
+  try { await navigator.clipboard.writeText(url); showToast('Link copied!'); }
+  catch(e){ showToast('Copy: '+url); }
 }
 
 // Scan logging (throttled: same slug skipped within 30s)
