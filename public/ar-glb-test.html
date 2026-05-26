@@ -40,12 +40,21 @@ AFRAME.registerComponent('ml',{init:function(){
     <!-- Tiny reference box so you can see the marker origin -->
     <a-box position="0 0.05 0" scale="0.08 0.08 0.08" color="#c29a53"></a-box>
 
-    <!-- Glass at scale 0.07 — should be roughly drink-sized on the marker -->
-    <a-entity
-      gltf-model="url(/cola_glass.glb)"
-      ml
-      position="0 0 0"
-      scale="0.07 0.07 0.07"
+    <!-- scale 0.003 — far left -->
+    <a-entity gltf-model="url(/cola_glass.glb)" ml
+      position="-0.6 0 0" scale="0.003 0.003 0.003"
+      animation="property:rotation;to:0 360 0;loop:true;dur:5000;easing:linear">
+    </a-entity>
+
+    <!-- scale 0.006 — center -->
+    <a-entity gltf-model="url(/cola_glass.glb)"
+      position="0 0 0" scale="0.006 0.006 0.006"
+      animation="property:rotation;to:0 360 0;loop:true;dur:5000;easing:linear">
+    </a-entity>
+
+    <!-- scale 0.012 — right -->
+    <a-entity gltf-model="url(/cola_glass.glb)"
+      position="0.6 0 0" scale="0.012 0.012 0.012"
       animation="property:rotation;to:0 360 0;loop:true;dur:5000;easing:linear">
     </a-entity>
 
