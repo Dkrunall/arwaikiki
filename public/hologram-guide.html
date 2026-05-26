@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Waikiki — Hologram Table Setup Guide</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --maroon:#510909;--gold:#c29a53;--cream:#fcefd4;
+    --dark:#0c0812;--card:#fff;
+  }
+  body{
+    font-family:'Helvetica Neue',Arial,sans-serif;
+    background:var(--cream);color:var(--maroon);
+    min-height:100vh;
+  }
+
+  /* ── Header ── */
+  header{
+    background:var(--maroon);color:var(--cream);
+    padding:40px 24px 32px;text-align:center;
+    border-bottom:4px solid var(--gold);
+  }
+  header .emoji{font-size:48px;margin-bottom:12px}
+  header h1{
+    font-size:clamp(22px,5vw,36px);font-weight:900;
+    text-transform:uppercase;letter-spacing:.15em;
+    margin-bottom:8px;
+  }
+  header p{font-size:14px;opacity:.7;letter-spacing:.05em;font-weight:500}
+
+  /* ── Layout ── */
+  .container{max-width:900px;margin:0 auto;padding:40px 20px 80px}
+
+  /* ── Section headings ── */
+  h2{
+    font-size:11px;font-weight:900;text-transform:uppercase;
+    letter-spacing:.25em;color:var(--gold);
+    border-bottom:1px solid rgba(81,9,9,.1);
+    padding-bottom:10px;margin:48px 0 24px;
+  }
+  h3{font-size:17px;font-weight:800;color:var(--maroon);margin-bottom:8px}
+
+  /* ── Cards ── */
+  .card{
+    background:#fff;border-radius:16px;padding:28px;
+    box-shadow:0 4px 24px rgba(81,9,9,.07);
+    border:1px solid rgba(81,9,9,.08);
+    margin-bottom:20px;
+  }
+  .card-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:580px){.card-row{grid-template-columns:1fr}}
+
+  /* ── How it works diagram ── */
+  .diagram{
+    background:var(--dark);border-radius:16px;padding:32px 24px;
+    color:#fff;text-align:center;margin-bottom:20px;
+    font-family:'Courier New',monospace;
+  }
+  .diagram pre{
+    font-size:clamp(11px,2.5vw,14px);line-height:1.7;
+    color:#e0d4b8;display:inline-block;text-align:left;
+  }
+  .diagram .label{
+    font-size:11px;font-weight:700;letter-spacing:.15em;
+    text-transform:uppercase;color:var(--gold);margin-bottom:16px;
+  }
+
+  /* ── Step list ── */
+  .steps{list-style:none;display:flex;flex-direction:column;gap:14px}
+  .steps li{
+    display:flex;align-items:flex-start;gap:14px;
+    background:#fff;border-radius:12px;padding:16px 18px;
+    border:1px solid rgba(81,9,9,.08);
+    box-shadow:0 2px 8px rgba(81,9,9,.04);
+  }
+  .step-num{
+    min-width:30px;height:30px;border-radius:50%;
+    background:var(--maroon);color:var(--cream);
+    font-size:12px;font-weight:900;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  }
+  .steps li p{font-size:13px;line-height:1.6;color:rgba(81,9,9,.8)}
+  .steps li strong{color:var(--maroon)}
+
+  /* ── Product cards ── */
+  .product{
+    background:#fff;border-radius:16px;overflow:hidden;
+    border:1px solid rgba(81,9,9,.1);
+    box-shadow:0 4px 20px rgba(81,9,9,.06);
+    display:flex;flex-direction:column;
+  }
+  .product-header{
+    background:var(--maroon);padding:18px 20px;color:var(--cream);
+  }
+  .product-header .tag{
+    font-size:9px;font-weight:900;text-transform:uppercase;
+    letter-spacing:.2em;color:var(--gold);margin-bottom:6px;
+  }
+  .product-header h3{font-size:16px;font-weight:900;color:#fff;margin:0}
+  .product-body{padding:20px;flex:1;display:flex;flex-direction:column;gap:10px}
+  .product-body p{font-size:13px;color:rgba(81,9,9,.75);line-height:1.55}
+  .spec-row{display:flex;justify-content:space-between;font-size:12px;padding:6px 0;border-bottom:1px solid rgba(81,9,9,.06)}
+  .spec-row span:first-child{font-weight:700;color:rgba(81,9,9,.5);text-transform:uppercase;letter-spacing:.05em;font-size:10px}
+  .spec-row span:last-child{font-weight:800;color:var(--maroon)}
+  .product-links{display:flex;flex-direction:column;gap:8px;padding:16px 20px 20px;border-top:1px solid rgba(81,9,9,.07)}
+  .buy-btn{
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    padding:11px 16px;border-radius:10px;font-size:12px;font-weight:800;
+    text-decoration:none;text-transform:uppercase;letter-spacing:.08em;
+    transition:opacity .2s;
+  }
+  .buy-btn:hover{opacity:.82}
+  .btn-amazon{background:#FF9900;color:#111}
+  .btn-flipkart{background:#2874F0;color:#fff}
+  .btn-aliexpress{background:#E43225;color:#fff}
+  .recommended-badge{
+    display:inline-flex;align-items:center;gap:5px;
+    background:rgba(194,154,83,.15);border:1px solid rgba(194,154,83,.4);
+    color:var(--gold);font-size:9px;font-weight:900;
+    text-transform:uppercase;letter-spacing:.15em;
+    padding:4px 10px;border-radius:99px;margin-bottom:8px;
+  }
+
+  /* ── Cost table ── */
+  .cost-table{width:100%;border-collapse:collapse;font-size:13px}
+  .cost-table th{
+    text-align:left;padding:10px 14px;
+    background:var(--maroon);color:var(--cream);
+    font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.12em;
+  }
+  .cost-table td{padding:10px 14px;border-bottom:1px solid rgba(81,9,9,.07)}
+  .cost-table tr:last-child td{font-weight:900;background:rgba(81,9,9,.04);font-size:14px}
+  .cost-table td:last-child{font-weight:800;text-align:right}
+
+  /* ── How app connects ── */
+  .flow{
+    display:flex;align-items:center;gap:0;flex-wrap:wrap;
+    justify-content:center;gap:4px;margin:20px 0;
+  }
+  .flow-box{
+    background:#fff;border:1px solid rgba(81,9,9,.12);
+    border-radius:10px;padding:12px 16px;font-size:12px;
+    font-weight:800;text-align:center;color:var(--maroon);
+    min-width:110px;
+  }
+  .flow-arrow{font-size:18px;color:var(--gold);font-weight:900}
+
+  /* ── Notice box ── */
+  .notice{
+    background:rgba(194,154,83,.1);border:1px solid rgba(194,154,83,.35);
+    border-left:4px solid var(--gold);
+    border-radius:0 12px 12px 0;padding:16px 18px;
+    font-size:13px;line-height:1.6;color:rgba(81,9,9,.85);
+    margin-bottom:20px;
+  }
+  .notice strong{color:var(--maroon)}
+
+  /* ── Footer ── */
+  footer{
+    text-align:center;padding:32px;
+    border-top:1px solid rgba(81,9,9,.1);
+    font-size:11px;font-weight:700;text-transform:uppercase;
+    letter-spacing:.2em;color:rgba(81,9,9,.4);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="emoji">🔮</div>
+  <h1>Hologram Table Setup Guide</h1>
+  <p>Waikiki Bar &amp; Lounge — Interactive WebAR Cocktail Menu</p>
+</header>
+
+<div class="container">
+
+  <!-- ── HOW IT WORKS ── -->
+  <h2>How It Works</h2>
+
+  <div class="diagram">
+    <div class="label">Pepper's Ghost — Side View</div>
+    <pre>
+         ╱▔▔▔▔▔▔▔▔▔▔▔╲
+        ╱   🍹 float  ╲       ← cocktail appears
+       ╱   in mid-air  ╲         to float here
+      ╱_________________╲
+      │   ╲         ╱   │
+      │    ╲  glass╱    │       ← 45° angled mirror
+      │     ╲     ╱     │          reflects the screen
+      │      ╲   ╱      │
+      │       ╲ ╱       │
+      ╔═════════════════╗
+      ║  📱 TABLET/PHONE ║       ← your /hologram page
+      ║  black bg + 3D   ║          runs here (face up)
+      ╚═════════════════╝
+    </pre>
+  </div>
+
+  <div class="diagram">
+    <div class="label">4-Quadrant Screen Layout (what the tablet shows)</div>
+    <pre>
+        ┌──────────┬──────────┐
+        │          │  TOP     │
+        │  LEFT    │  🍹 ↑    │
+        │  🍹 →    │          │
+        ├──────────┼──────────┤
+        │          │  RIGHT   │
+        │  BOTTOM  │  🍹 ←    │
+        │  🍹 ↓    │          │
+        └──────────┴──────────┘
+    The pyramid reflects all 4 copies
+    into one central floating image.
+    </pre>
+  </div>
+
+  <p class="notice">
+    <strong>Key principle:</strong> Black = invisible on the pyramid. Only the colored, lit parts of the screen reflect and appear as the hologram. That's why your cocktail page must have a pure black background — the black disappears and only the cocktail floats.
+  </p>
+
+  <!-- ── HOW APP CONNECTS ── -->
+  <h2>How Your App Connects</h2>
+
+  <div class="flow">
+    <div class="flow-box">Admin Panel<br/><span style="font-weight:400;font-size:11px;opacity:.6">add cocktails</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">Supabase<br/><span style="font-weight:400;font-size:11px;opacity:.6">live database</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">/hologram<br/><span style="font-weight:400;font-size:11px;opacity:.6">page on tablet</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">Pyramid<br/><span style="font-weight:400;font-size:11px;opacity:.6">on every table</span></div>
+  </div>
+
+  <ul class="steps">
+    <li>
+      <div class="step-num">1</div>
+      <p>You add or update a cocktail in the <strong>Admin Panel</strong> — toggle active/inactive, change price, upload new image.</p>
+    </li>
+    <li>
+      <div class="step-num">2</div>
+      <p>The <strong>/hologram page</strong> (running on a tablet inside each pyramid) fetches live data from Supabase every 30 seconds. Changes appear on all tables automatically.</p>
+    </li>
+    <li>
+      <div class="step-num">3</div>
+      <p>The page shows each active cocktail <strong>floating on black background</strong> in 4-quadrant layout, cycling every 8 seconds with the cocktail name, category and price.</p>
+    </li>
+    <li>
+      <div class="step-num">4</div>
+      <p>Customers at the table see the hologram and can <strong>tap the tablet</strong> to hold on a specific cocktail, then scan its QR code for the full WebAR experience on their phone.</p>
+    </li>
+  </ul>
+
+  <!-- ── RECOMMENDED HARDWARE ── -->
+  <h2>Recommended Hologram Pyramids</h2>
+
+  <p class="notice">
+    <strong>What to look for:</strong> Base size 25–35 cm works best for a bar table. Larger pyramids need bigger tablets. Always choose acrylic (not glass) for bar environments — safer if knocked over.
+  </p>
+
+  <div class="card-row">
+
+    <!-- Product 1 -->
+    <div class="product">
+      <div class="product-header">
+        <div class="tag">⭐ Best for bar tables</div>
+        <h3>25 cm Acrylic Hologram Pyramid</h3>
+      </div>
+      <div class="product-body">
+        <div class="recommended-badge">✦ Recommended</div>
+        <p>Fits on any bar table. Works with a 7–8 inch tablet. Visible from 1–1.5 metres in a dimly lit nightclub. Acrylic — safe and durable.</p>
+        <div class="spec-row"><span>Base size</span><span>25 × 25 cm</span></div>
+        <div class="spec-row"><span>Works with</span><span>7–8" tablet / phone</span></div>
+        <div class="spec-row"><span>Viewing distance</span><span>0.5 – 1.5 m</span></div>
+        <div class="spec-row"><span>Material</span><span>Acrylic (safe)</span></div>
+        <div class="spec-row"><span>Approx price</span><span>₹800 – ₹2,500</span></div>
+      </div>
+      <div class="product-links">
+        <a class="buy-btn btn-amazon" href="https://www.amazon.in/s?k=25cm+hologram+pyramid+acrylic+display" target="_blank">
+          🛒 Search on Amazon India
+        </a>
+        <a class="buy-btn btn-flipkart" href="https://www.flipkart.com/search?q=25cm+hologram+pyramid+acrylic" target="_blank">
+          🛒 Search on Flipkart
+        </a>
+      </div>
+    </div>
+
+    <!-- Product 2 -->
+    <div class="product">
+      <div class="product-header">
+        <div class="tag">Maximum visibility</div>
+        <h3>30–35 cm Hologram Pyramid</h3>
+      </div>
+      <div class="product-body">
+        <p>Larger image, visible from further away. Best for VIP tables or showcase areas. Needs a 10" tablet. More impressive hologram effect.</p>
+        <div class="spec-row"><span>Base size</span><span>30 – 35 × 30 cm</span></div>
+        <div class="spec-row"><span>Works with</span><span>10" tablet</span></div>
+        <div class="spec-row"><span>Viewing distance</span><span>1 – 2.5 m</span></div>
+        <div class="spec-row"><span>Material</span><span>Acrylic or glass</span></div>
+        <div class="spec-row"><span>Approx price</span><span>₹1,500 – ₹5,000</span></div>
+      </div>
+      <div class="product-links">
+        <a class="buy-btn btn-amazon" href="https://www.amazon.in/s?k=30cm+hologram+pyramid+display+acrylic" target="_blank">
+          🛒 Search on Amazon India
+        </a>
+        <a class="buy-btn btn-aliexpress" href="https://www.aliexpress.com/wholesale?SearchText=30cm+hologram+pyramid+display+acrylic" target="_blank">
+          🛒 Search on AliExpress
+        </a>
+      </div>
+    </div>
+
+    <!-- Product 3 -->
+    <div class="product">
+      <div class="product-header">
+        <div class="tag">Budget option</div>
+        <h3>Phone-sized Mini Pyramid</h3>
+      </div>
+      <div class="product-body">
+        <p>Very small, works with any smartphone. Good for testing the concept before buying table-sized units. Place phone face-down inside.</p>
+        <div class="spec-row"><span>Base size</span><span>10 – 15 cm</span></div>
+        <div class="spec-row"><span>Works with</span><span>Any smartphone</span></div>
+        <div class="spec-row"><span>Viewing distance</span><span>20 – 50 cm</span></div>
+        <div class="spec-row"><span>Material</span><span>Acrylic / plastic</span></div>
+        <div class="spec-row"><span>Approx price</span><span>₹200 – ₹600</span></div>
+      </div>
+      <div class="product-links">
+        <a class="buy-btn btn-amazon" href="https://www.amazon.in/s?k=hologram+pyramid+smartphone+3d" target="_blank">
+          🛒 Search on Amazon India
+        </a>
+        <a class="buy-btn btn-flipkart" href="https://www.flipkart.com/search?q=hologram+pyramid+smartphone" target="_blank">
+          🛒 Search on Flipkart
+        </a>
+      </div>
+    </div>
+
+    <!-- Product 4 -->
+    <div class="product">
+      <div class="product-header">
+        <div class="tag">Tablet recommendation</div>
+        <h3>Android Tablet (Kiosk device)</h3>
+      </div>
+      <div class="product-body">
+        <p>Any cheap Android tablet works. Lock it in kiosk mode to prevent guests from closing the browser. 7–8 inch is ideal for the 25 cm pyramid.</p>
+        <div class="spec-row"><span>Size</span><span>7 – 8 inch</span></div>
+        <div class="spec-row"><span>OS</span><span>Android 9+</span></div>
+        <div class="spec-row"><span>RAM</span><span>2 GB minimum</span></div>
+        <div class="spec-row"><span>Approx price</span><span>₹5,000 – ₹9,000</span></div>
+      </div>
+      <div class="product-links">
+        <a class="buy-btn btn-amazon" href="https://www.amazon.in/s?k=android+tablet+7+inch+kiosk" target="_blank">
+          🛒 Search on Amazon India
+        </a>
+        <a class="buy-btn btn-flipkart" href="https://www.flipkart.com/search?q=android+tablet+7+inch" target="_blank">
+          🛒 Search on Flipkart
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── COST BREAKDOWN ── -->
+  <h2>Cost Per Table (20 Tables)</h2>
+
+  <div class="card">
+    <table class="cost-table">
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Unit Cost</th>
+          <th>× 20 Tables</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>25 cm Acrylic Pyramid</td>
+          <td>₹1,500</td>
+          <td>₹30,000</td>
+        </tr>
+        <tr>
+          <td>Android 7" Tablet</td>
+          <td>₹7,000</td>
+          <td>₹1,40,000</td>
+        </tr>
+        <tr>
+          <td>Charging cable + stand</td>
+          <td>₹300</td>
+          <td>₹6,000</td>
+        </tr>
+        <tr>
+          <td>WiFi router (if needed)</td>
+          <td>—</td>
+          <td>₹3,000</td>
+        </tr>
+        <tr>
+          <td style="font-size:15px">Total Estimate</td>
+          <td>—</td>
+          <td>~₹1.8 Lakhs</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="notice">
+    <strong>Tip:</strong> Buy one pyramid + one tablet first to test. The /hologram page will be ready for you to load and test before purchasing for all tables.
+  </p>
+
+  <!-- ── TABLET SETUP ── -->
+  <h2>Tablet Setup Instructions</h2>
+
+  <ul class="steps">
+    <li>
+      <div class="step-num">1</div>
+      <p>Open Chrome on the tablet. Go to <strong>arwaikiki.vercel.app/hologram</strong></p>
+    </li>
+    <li>
+      <div class="step-num">2</div>
+      <p>Tap the three dots → <strong>Add to Home Screen</strong>. This creates a fullscreen shortcut with no browser chrome.</p>
+    </li>
+    <li>
+      <div class="step-num">3</div>
+      <p>In Android Settings → <strong>Display → Screen Timeout → set to Never</strong>. Screen must stay on 24/7.</p>
+    </li>
+    <li>
+      <div class="step-num">4</div>
+      <p>Install <strong>Fully Kiosk Browser</strong> (free on Play Store) to lock the tablet — guests cannot close the app or access other apps.</p>
+    </li>
+    <li>
+      <div class="step-num">5</div>
+      <p>Place the tablet <strong>face-up</strong> inside the pyramid base. The pyramid sits on top. Adjust the tablet brightness to maximum for the best hologram visibility.</p>
+    </li>
+    <li>
+      <div class="step-num">6</div>
+      <p>Keep the tablet plugged in permanently. Use a cable that routes cleanly through the table (tape it down so guests don't pull it).</p>
+    </li>
+  </ul>
+
+  <!-- ── NIGHTCLUB TIPS ── -->
+  <h2>Nightclub Environment Tips</h2>
+
+  <div class="card-row">
+    <div class="card">
+      <h3>💡 Lighting</h3>
+      <p style="font-size:13px;line-height:1.6;margin-top:8px;color:rgba(81,9,9,.75)">
+        Pepper's Ghost works <strong>best in dim lighting</strong>. Your nightclub environment is ideal. Avoid placing tables directly under strong spotlights — it washes out the hologram. Coloured ambient light (purple, blue) makes the hologram even more dramatic.
+      </p>
+    </div>
+    <div class="card">
+      <h3>🔒 Security</h3>
+      <p style="font-size:13px;line-height:1.6;margin-top:8px;color:rgba(81,9,9,.75)">
+        Use Fully Kiosk Browser in kiosk mode so guests can't mess with the tablet. Consider a small lock or adhesive base so the pyramid can't be easily lifted. Keep a spare pyramid at the bar in case one gets broken.
+      </p>
+    </div>
+    <div class="card">
+      <h3>📶 WiFi</h3>
+      <p style="font-size:13px;line-height:1.6;margin-top:8px;color:rgba(81,9,9,.75)">
+        The /hologram page fetches data every 30 seconds. A single WiFi router covers 20 tables easily. Separate your hologram tablet WiFi from guest WiFi for reliability.
+      </p>
+    </div>
+    <div class="card">
+      <h3>🔋 Power</h3>
+      <p style="font-size:13px;line-height:1.6;margin-top:8px;color:rgba(81,9,9,.75)">
+        Keep tablets plugged in at all times — a screen-on, always-fetching browser drains battery fast. Run power cables under the table and tape neatly. Use a multi-socket extension under each table cluster.
+      </p>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  Waikiki Bar &amp; Lounge — Hologram Setup Guide &nbsp;·&nbsp; arwaikiki.vercel.app
+</footer>
+
+</body>
+</html>
