@@ -840,15 +840,19 @@ function closeDesc() {
 function nav(dir) {
   if (navBusy) return;
   closeDesc();
-  var card = document.getElementById('ar-card');
-  if (!card) { cur = ((cur + dir) % tot + tot) % tot; render(); return; }
 
-  // Read actual live scale — more reliable than a tracked boolean
-  var sc = card.object3D ? card.object3D.scale : null;
+  var card  = document.getElementById('ar-card');
+  var el3d  = document.getElementById('ar-3d');
+  var curHas3D = DATA[cur] && DATA[cur].model_url;
+  var active   = curHas3D ? el3d : card;
+
+  if (!active) { cur = ((cur + dir) % tot + tot) % tot; render(); return; }
+
+  var sc = active.object3D ? active.object3D.scale : null;
   var curScale = sc ? sc.x : 0;
 
   if (curScale < 0.05) {
-    // Card not visible — swap content instantly, no animation needed
+    // Neither entity visible — swap instantly
     cur = ((cur + dir) % tot + tot) % tot;
     render();
     return;
@@ -857,21 +861,26 @@ function nav(dir) {
   navBusy = true;
   var fromStr = curScale.toFixed(3) + ' ' + curScale.toFixed(3) + ' ' + curScale.toFixed(3);
 
-  // Remove ALL existing scale animations so A-Frame treats the next setAttribute
-  // as a new animation — without this, identical attribute values are ignored
-  card.removeAttribute('animation__popin');
-  card.removeAttribute('animation__navin');
-  card.removeAttribute('animation__navout');
+  active.removeAttribute('animation__popin');
+  active.removeAttribute('animation__popin3d');
+  active.removeAttribute('animation__navin');
+  active.removeAttribute('animation__navout');
 
-  card.setAttribute('animation__navout',
+  active.setAttribute('animation__navout',
     'property:scale; from:' + fromStr + '; to:0 0 0; dur:200; easing:easeInBack');
 
   setTimeout(function() {
     cur = ((cur + dir) % tot + tot) % tot;
-    render();
-    card.removeAttribute('animation__navout');
-    card.setAttribute('animation__navin',
-      'property:scale; from:0 0 0; to:1 1 1; dur:420; easing:easeOutBack');
+    render(); // updates src + visibility
+    var nextHas3D = DATA[cur] && DATA[cur].model_url;
+    var next = nextHas3D ? el3d : card;
+    active.removeAttribute('animation__navout');
+    if (next) {
+      next.removeAttribute('animation__navout');
+      next.removeAttribute('animation__popout3d');
+      next.setAttribute('animation__navin',
+        'property:scale; from:0 0 0; to:1 1 1; dur:420; easing:easeOutBack');
+    }
     setTimeout(function() { navBusy = false; }, 440);
   }, 210);
 }
@@ -903,18 +912,18 @@ function render() {
   var ings = (Array.isArray(c.ingredients) ? c.ingredients : [c.ingredients])
              .slice(0, 4).join(' \xb7 ');
 
-  // Swap 3D model src and toggle card vs model visibility
+  // Swap 3D model src and toggle which entity is active
   var modelEl = document.getElementById('ar-model');
-  var card    = document.getElementById('ar-card');
+  var cardEl  = document.getElementById('ar-card');
   var el3d    = document.getElementById('ar-3d');
   if (c.model_url) {
     if (modelEl) modelEl.setAttribute('src', c.model_url);
-    if (card)  card.setAttribute('visible', 'false');
     if (el3d)  el3d.setAttribute('visible', 'true');
+    if (cardEl) { cardEl.setAttribute('visible', 'false'); if(cardEl.object3D) cardEl.object3D.scale.set(0,0,0); }
   } else {
     if (modelEl) modelEl.setAttribute('src', '');
-    if (card)  card.setAttribute('visible', 'true');
-    if (el3d)  el3d.setAttribute('visible', 'false');
+    if (cardEl) cardEl.setAttribute('visible', 'true');
+    if (el3d)  { el3d.setAttribute('visible', 'false'); if(el3d.object3D) el3d.object3D.scale.set(0,0,0); }
   }
 
   // Update A-Frame card
