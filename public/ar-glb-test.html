@@ -10,30 +10,74 @@
 <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
 <style>
   body { margin:0; overflow:hidden; background:#000; }
-  #info { position:fixed; top:20px; left:0; right:0; text-align:center; color:#fff;
-    font-family:sans-serif; font-size:13px; font-weight:bold; z-index:999;
-    text-shadow:0 1px 4px rgba(0,0,0,.8); pointer-events:none; }
+  #status {
+    position:fixed; top:0; left:0; right:0; z-index:999;
+    background:rgba(0,0,0,.7); color:#fff; font:bold 13px/1 sans-serif;
+    padding:12px 16px; display:flex; flex-direction:column; gap:6px;
+    pointer-events:none;
+  }
+  .row { display:flex; align-items:center; gap:8px; }
+  .dot { width:10px; height:10px; border-radius:50%; background:#555; flex-shrink:0; }
+  .dot.green { background:#4caf50; }
+  .dot.red   { background:#f44336; }
 </style>
 </head>
 <body>
-<div id="info">Point camera at Waikiki marker — 3D glass should appear</div>
 
-<a-scene embedded arjs="sourceType:webcam;debugUIEnabled:false;"
+<div id="status">
+  <div class="row"><div class="dot" id="d-cam"></div><span id="t-cam">Camera: waiting…</span></div>
+  <div class="row"><div class="dot" id="d-mark"></div><span id="t-mark">Marker: not detected</span></div>
+  <div class="row"><div class="dot" id="d-model"></div><span id="t-model">Model: loading…</span></div>
+</div>
+
+<script>
+function set(id, dotId, msg, ok) {
+  document.getElementById(id).textContent = msg;
+  document.getElementById(dotId).className = 'dot ' + (ok ? 'green' : 'red');
+}
+window.addEventListener('camera-init', function() { set('t-cam','d-cam','Camera: active ✓', true); });
+window.addEventListener('camera-error', function() { set('t-cam','d-cam','Camera: BLOCKED ✗', false); });
+window.addEventListener('arjs-video-loaded', function() { set('t-cam','d-cam','Camera: streaming ✓', true); });
+
+AFRAME.registerComponent('marker-status', {
+  init: function() {
+    var el = this.el;
+    el.addEventListener('markerFound', function() {
+      set('t-mark','d-mark','Marker: DETECTED ✓', true);
+    });
+    el.addEventListener('markerLost', function() {
+      set('t-mark','d-mark','Marker: lost…', false);
+    });
+  }
+});
+</script>
+
+<a-scene embedded
+  arjs="sourceType:webcam;debugUIEnabled:false;"
   renderer="precision:medium;alpha:true;antialias:true;"
   vr-mode-ui="enabled:false">
 
-  <a-assets timeout="15000">
-    <a-asset-item id="cola" src="/cola_glass.glb" crossorigin="anonymous"></a-asset-item>
+  <a-assets timeout="20000">
+    <a-asset-item id="cola" src="/cola_glass.glb" crossorigin="anonymous"
+      onload="set('t-model','d-model','Model: loaded ✓', true)"
+      onerror="set('t-model','d-model','Model: FAILED to load ✗', false)">
+    </a-asset-item>
   </a-assets>
 
-  <a-marker type="pattern" url="/markers/waikikiAR.patt" smooth="true">
+  <a-marker type="pattern" url="/markers/waikikiAR.patt"
+    smooth="true" smoothCount="5" marker-status>
+
+    <!-- RED BOX — appears immediately when marker is detected (no model needed) -->
+    <a-box position="0 0.5 0" scale="0.3 0.3 0.3" color="#ff0000" opacity="0.9"></a-box>
+
+    <!-- GLB model — test at multiple scales -->
     <a-entity
       gltf-model="#cola"
-      position="0 0.2 0"
-      scale="0.5 0.5 0.5"
-      rotation="0 0 0"
+      position="0 0 0"
+      scale="0.3 0.3 0.3"
       animation="property:rotation;to:0 360 0;loop:true;dur:4000;easing:linear">
     </a-entity>
+
   </a-marker>
 
   <a-entity camera></a-entity>
