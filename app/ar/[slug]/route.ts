@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 interface Cocktail {
   id: string; name: string; slug: string; category: string;
   description: string; ingredients: string[] | string;
-  price: number; image_url: string; video_url?: string; card_color: string;
+  price: number; image_url: string; video_url?: string; model_url?: string; card_color: string;
   is_active: boolean; scan_count?: number; is_daily_special?: boolean;
 }
 
@@ -88,6 +88,7 @@ function buildHTML(cocktails: Cocktail[], startIndex: number, origin: string): s
     price:      c.price,
     image_url:  c.image_url || '',
     video_url:  c.video_url || '',
+    model_url:  c.model_url  || '',
     card_color: c.card_color || '#0c0918',
     scan_count:       c.scan_count || 0,
     is_daily_special: c.is_daily_special || false,
@@ -335,8 +336,15 @@ AFRAME.registerComponent('waikiki-events', {
       if(tips)    tips.style.display = 'none';
       if(scanarea) scanarea.classList.add('hide');
       if(camst)  { camst.textContent = '✓ LOCKED'; camst.classList.add('locked'); }
-      if(card) card.setAttribute('animation__popin',
-        'property:scale; from:0 0 0; to:1 1 1; dur:450; easing:easeOutBack');
+      var has3D = typeof DATA !== 'undefined' && DATA[cur] && DATA[cur].model_url;
+      var el3d = document.getElementById('ar-3d');
+      if (has3D) {
+        if(el3d) el3d.setAttribute('animation__popin3d',
+          'property:scale; from:0 0 0; to:1 1 1; dur:450; easing:easeOutBack');
+      } else {
+        if(card) card.setAttribute('animation__popin',
+          'property:scale; from:0 0 0; to:1 1 1; dur:450; easing:easeOutBack');
+      }
       // Log scan
       if (typeof logScan === 'function' && typeof DATA !== 'undefined') logScan(DATA[cur].slug);
       // Enable tap zone + show hint briefly
@@ -351,6 +359,9 @@ AFRAME.registerComponent('waikiki-events', {
       if(scanarea) scanarea.classList.remove('hide');
       if(camst)  { camst.textContent = '● SCANNING'; camst.classList.remove('locked'); }
       if(card) card.setAttribute('animation__popout',
+        'property:scale; from:1 1 1; to:0 0 0; dur:220; easing:easeInBack');
+      var el3d = document.getElementById('ar-3d');
+      if(el3d) el3d.setAttribute('animation__popout3d',
         'property:scale; from:1 1 1; to:0 0 0; dur:220; easing:easeInBack');
       // Disable tap zone + close sheet if open
       var tz = document.getElementById('tapzone');
@@ -476,6 +487,17 @@ window.addEventListener('camera-error', function() {
       <a-entity geometry="primitive:sphere;radius:0.038;segmentsHeight:6;segmentsWidth:8" material="color:#bce0f2;opacity:0.47;transparent:true" position="-0.35 -1.25 0.12" animation__rise="property:position;from:-0.35 -1.25 0.12;to:-0.35 2.05 0.12;dur:2800;loop:true;delay:1200;easing:linear" animation__fade="property:material.opacity;from:0.47;to:0;dur:2800;loop:true;delay:1200;easing:easeInQuad"></a-entity>
 
     </a-entity>
+
+    <!-- 3D model — floats on marker when model_url exists -->
+    <a-entity id="ar-3d" scale="0 0 0" position="0 0.1 0">
+      <a-gltf-model id="ar-model"
+        src="${f.model_url ? esc(f.model_url) : ''}"
+        scale="0.4 0.4 0.4"
+        rotation="0 0 0"
+        animation="property:rotation;to:0 360 0;loop:true;dur:5000;easing:linear">
+      </a-gltf-model>
+    </a-entity>
+
   </a-marker>
 
   <a-entity camera></a-entity>
@@ -880,6 +902,20 @@ function render() {
   var c    = DATA[cur];
   var ings = (Array.isArray(c.ingredients) ? c.ingredients : [c.ingredients])
              .slice(0, 4).join(' \xb7 ');
+
+  // Swap 3D model src and toggle card vs model visibility
+  var modelEl = document.getElementById('ar-model');
+  var card    = document.getElementById('ar-card');
+  var el3d    = document.getElementById('ar-3d');
+  if (c.model_url) {
+    if (modelEl) modelEl.setAttribute('src', c.model_url);
+    if (card)  card.setAttribute('visible', 'false');
+    if (el3d)  el3d.setAttribute('visible', 'true');
+  } else {
+    if (modelEl) modelEl.setAttribute('src', '');
+    if (card)  card.setAttribute('visible', 'true');
+    if (el3d)  el3d.setAttribute('visible', 'false');
+  }
 
   // Update A-Frame card
   document.getElementById('ar-img').setAttribute('src', '#ci' + cur);

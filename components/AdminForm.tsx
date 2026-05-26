@@ -166,7 +166,7 @@ export default function AdminForm({ initialData, onSave, onCancel }: AdminFormPr
 
         const { error: modelUploadError } = await supabase.storage
           .from('cocktail-models')
-          .upload(filePath, modelFile, { cacheControl: '3600', upsert: true });
+          .upload(filePath, modelFile, { cacheControl: '3600', upsert: true, contentType: 'model/gltf-binary' });
 
         if (modelUploadError) throw modelUploadError;
 

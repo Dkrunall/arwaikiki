@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>3D Model Test</title>
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+  <style>
+    body { margin: 0; background: #111; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: sans-serif; color: #fff; }
+    model-viewer { width: 380px; height: 380px; background: transparent; }
+    p { margin-top: 16px; font-size: 13px; opacity: .6; }
+  </style>
+</head>
+<body>
+  <model-viewer
+    src="/cola_glass.glb"
+    alt="Cola Glass"
+    auto-rotate
+    camera-controls
+    shadow-intensity="1"
+    exposure="1.2"
+    style="width:380px;height:380px"
+  ></model-viewer>
+  <p>cola_glass.glb — drag to rotate, scroll to zoom</p>
+</body>
+</html>
