@@ -23,10 +23,13 @@ export default function AdminForm({ initialData, onSave, onCancel }: AdminFormPr
   const [imageUrl, setImageUrl] = useState('');
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoUrl, setVideoUrl] = useState('');
+  const [modelFile, setModelFile] = useState<File | null>(null);
+  const [modelUrl, setModelUrl] = useState('');
 
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [uploadingModel, setUploadingModel] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
@@ -45,6 +48,7 @@ export default function AdminForm({ initialData, onSave, onCancel }: AdminFormPr
       setIsActive(initialData.is_active);
       setImageUrl(initialData.image_url || '');
       setVideoUrl(initialData.video_url || '');
+      setModelUrl(initialData.model_url || '');
     } else {
       resetForm();
     }
@@ -62,6 +66,8 @@ export default function AdminForm({ initialData, onSave, onCancel }: AdminFormPr
     setImageUrl('');
     setVideoFile(null);
     setVideoUrl('');
+    setModelFile(null);
+    setModelUrl('');
     setErrorMsg('');
     setSuccessMsg('');
   };
@@ -113,6 +119,7 @@ export default function AdminForm({ initialData, onSave, onCancel }: AdminFormPr
 
       let finalImageUrl = imageUrl;
       let finalVideoUrl = videoUrl;
+      let finalModelUrl = modelUrl;
 
       // 2. Upload image to Supabase Storage if a new file is chosen
       if (imageFile) {
@@ -150,6 +157,24 @@ export default function AdminForm({ initialData, onSave, onCancel }: AdminFormPr
         setUploadingVideo(false);
       }
 
+      // 4. Upload .glb model to Supabase Storage
+      if (modelFile) {
+        setUploadingModel(true);
+        const fileExt = modelFile.name.split('.').pop();
+        const fileName = `${slug}-${Date.now()}.${fileExt}`;
+        const filePath = `public/${fileName}`;
+
+        const { error: modelUploadError } = await supabase.storage
+          .from('cocktail-models')
+          .upload(filePath, modelFile, { cacheControl: '3600', upsert: true });
+
+        if (modelUploadError) throw modelUploadError;
+
+        const { data } = supabase.storage.from('cocktail-models').getPublicUrl(filePath);
+        finalModelUrl = data.publicUrl;
+        setUploadingModel(false);
+      }
+
       // Convert ingredients text to array
       const ingredients = ingredientsText
         .split(',')
@@ -165,6 +190,7 @@ export default function AdminForm({ initialData, onSave, onCancel }: AdminFormPr
         price: parseFloat(price),
         image_url: finalImageUrl,
         video_url: finalVideoUrl || null,
+        model_url: finalModelUrl || null,
         card_color: cardColor,
         is_active: isActive,
       };
@@ -208,6 +234,7 @@ export default function AdminForm({ initialData, onSave, onCancel }: AdminFormPr
       setLoading(false);
       setUploading(false);
       setUploadingVideo(false);
+      setUploadingModel(false);
     }
   };
 
@@ -464,6 +491,65 @@ export default function AdminForm({ initialData, onSave, onCancel }: AdminFormPr
         </div>
       </div>
 
+      {/* 3D Model upload */}
+      <div className="flex flex-col gap-2 relative z-10">
+        <label className="text-[10px] font-black text-[var(--brand-maroon)]/70 uppercase tracking-widest flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#c29a53]" />
+          3D Model (.glb) <span className="text-[var(--brand-maroon)]/40 normal-case font-medium tracking-normal">— optional, interactive 3D on the card</span>
+        </label>
+        <div className="flex items-center gap-5 p-5 rounded-2xl border border-dashed border-[var(--brand-maroon)]/15 bg-white/10 hover:bg-white/20 transition-all">
+          <label className="flex flex-col items-center justify-center w-24 h-24 bg-white/20 hover:bg-white/40 border border-[var(--brand-maroon)]/10 hover:border-[var(--brand-maroon)]/30 rounded-xl cursor-pointer transition-all text-[var(--brand-maroon)] shrink-0 group">
+            <Upload size={22} className="mb-1 text-[var(--brand-maroon)]/70 group-hover:scale-110 transition-transform" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-[var(--brand-maroon)]/85">Choose GLB</span>
+            <input
+              type="file"
+              accept=".glb,.gltf"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                if (!file.name.match(/\.(glb|gltf)$/i)) {
+                  setErrorMsg('Please select a .glb or .gltf file.');
+                  return;
+                }
+                setModelFile(file);
+                setErrorMsg('');
+              }}
+              className="hidden"
+            />
+          </label>
+
+          <div className="flex-1 min-w-0">
+            {uploadingModel ? (
+              <div className="flex items-center gap-2">
+                <Loader2 size={14} className="animate-spin text-[var(--brand-maroon)]" />
+                <span className="text-xs font-black text-[var(--brand-maroon)] uppercase tracking-wider">Uploading model…</span>
+              </div>
+            ) : modelFile ? (
+              <div>
+                <p className="text-xs font-black text-[var(--brand-maroon)] truncate uppercase tracking-wide">{modelFile.name}</p>
+                <p className="text-[10px] text-[var(--brand-maroon)]/55 font-mono mt-0.5">{(modelFile.size / (1024 * 1024)).toFixed(1)} MB — Ready to upload</p>
+              </div>
+            ) : modelUrl ? (
+              <div>
+                <p className="text-xs text-[var(--brand-maroon)]/70 truncate font-mono">{modelUrl.split('/').pop()}</p>
+                <p className="text-[10px] text-[var(--brand-maroon)] font-black uppercase tracking-widest flex items-center gap-1 mt-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--brand-maroon)] animate-pulse" />
+                  3D Model Linked
+                </p>
+                <button type="button" onClick={() => setModelUrl('')} className="text-[10px] text-red-500 font-black uppercase tracking-wider mt-1 hover:underline">
+                  Remove
+                </button>
+              </div>
+            ) : (
+              <div>
+                <p className="text-xs font-bold text-[var(--brand-maroon)]/60">Upload a .glb file to show interactive 3D on the card</p>
+                <p className="text-[10px] text-[var(--brand-maroon)]/50 mt-1 uppercase tracking-wider">Free models: sketchfab.com · poly.pizza · market.pmnd.rs</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Switch active toggle */}
       <div className="flex items-center justify-between p-4.5 rounded-2xl bg-white/20 border border-[var(--brand-maroon)]/10 w-full relative z-10 mt-2">
         <div className="flex flex-col gap-0.5">
@@ -498,7 +584,7 @@ export default function AdminForm({ initialData, onSave, onCancel }: AdminFormPr
         )}
         <button
           type="submit"
-          disabled={loading || uploading || uploadingVideo}
+          disabled={loading || uploading || uploadingVideo || uploadingModel}
           className="px-6 py-3.5 rounded-xl bg-[var(--brand-maroon)] text-[#fcefd4] hover:bg-[#6c1010] font-black uppercase tracking-widest text-xs active:scale-98 transition-all flex items-center justify-center gap-2.5 shadow-lg shadow-[var(--brand-maroon)]/15 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading || uploading ? (

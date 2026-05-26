@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Outfit, Space_Grotesk } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -58,7 +59,14 @@ export default function RootLayout({
       lang="en"
       className={`${outfit.variable} ${spaceGrotesk.variable} h-full antialiased scroll-smooth`}
     >
-      <body className="min-h-full flex flex-col bg-[#fcefd4] text-[#510909] font-sans">{children}</body>
+      <body className="min-h-full flex flex-col bg-[#fcefd4] text-[#510909] font-sans">
+        {children}
+        <Script
+          type="module"
+          src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"
+          strategy="lazyOnload"
+        />
+      </body>
     </html>
   );
 }

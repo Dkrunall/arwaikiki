@@ -8,6 +8,7 @@ export interface Cocktail {
   price: number;
   image_url: string;
   video_url?: string;
+  model_url?: string;
   card_color: string;
   is_active: boolean;
   created_at?: string;

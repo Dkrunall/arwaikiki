@@ -6,6 +6,16 @@ import { Download, Printer, ExternalLink, QrCode } from 'lucide-react';
 import { Cocktail } from '@/types/cocktail';
 import Link from 'next/link';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
+
+const CocktailScene = dynamic(() => import('@/components/CocktailScene'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-full flex items-center justify-center">
+      <div className="w-6 h-6 border-2 border-[var(--brand-maroon)]/30 border-t-[var(--brand-maroon)] rounded-full animate-spin" />
+    </div>
+  ),
+});
 
 interface CocktailCardProps {
   cocktail: Cocktail;
@@ -14,6 +24,7 @@ interface CocktailCardProps {
 export default function CocktailCard({ cocktail }: CocktailCardProps) {
   const [arUrl, setArUrl] = useState('');
   const [showQR, setShowQR] = useState(false);
+  const [show3D, setShow3D] = useState(false);
   const qrRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
@@ -209,7 +220,23 @@ export default function CocktailCard({ cocktail }: CocktailCardProps) {
             className="absolute inset-0 opacity-10 blur-xl group-hover:opacity-30 transition-opacity duration-500"
             style={{ backgroundColor: cardColor }}
           />
-          {cocktail.image_url ? (
+
+          {/* 3D view — uploaded .glb takes priority, else Three.js glass */}
+          {show3D ? (
+            cocktail.model_url ? (
+              <model-viewer
+                src={cocktail.model_url}
+                alt={cocktail.name}
+                auto-rotate
+                camera-controls
+                shadow-intensity="1"
+                loading="eager"
+                style={{ width: '100%', height: '100%', background: 'transparent' }}
+              />
+            ) : (
+              <CocktailScene liquidColor={cardColor} />
+            )
+          ) : cocktail.image_url ? (
             <div className="absolute inset-5 z-10">
               <Image
                 src={cocktail.image_url}
@@ -222,12 +249,27 @@ export default function CocktailCard({ cocktail }: CocktailCardProps) {
           ) : (
             <div className="absolute inset-0 flex items-center justify-center text-[var(--brand-maroon)]/40 text-xs font-bold uppercase tracking-wider">No Image</div>
           )}
+
+          {/* Category badge */}
           <span
             className="absolute top-3 left-3 px-3 py-1 text-[9px] uppercase font-black rounded-lg tracking-wider text-[#fcefd4] z-20 shadow-lg"
             style={{ backgroundColor: cardColor }}
           >
             {cocktail.category}
           </span>
+
+          {/* 2D / 3D toggle — always available */}
+          <button
+            onClick={() => setShow3D(v => !v)}
+            className="absolute bottom-2 right-2 z-20 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all shadow-md"
+            style={{
+              background: show3D ? cardColor : 'rgba(255,255,255,0.75)',
+              color: show3D ? '#fcefd4' : cardColor,
+              border: `1px solid ${cardColor}55`,
+            }}
+          >
+            {show3D ? '2D' : '3D'}
+          </button>
         </div>
 
         {/* Cocktail details */}
