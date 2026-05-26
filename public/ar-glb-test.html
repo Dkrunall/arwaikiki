@@ -12,41 +12,41 @@
   body { margin:0; overflow:hidden; background:#000; }
   #status {
     position:fixed; top:0; left:0; right:0; z-index:999;
-    background:rgba(0,0,0,.7); color:#fff; font:bold 13px/1 sans-serif;
-    padding:12px 16px; display:flex; flex-direction:column; gap:6px;
-    pointer-events:none;
+    background:rgba(0,0,0,.75); color:#fff; font:bold 13px/1.6 sans-serif;
+    padding:10px 14px; pointer-events:none;
   }
-  .row { display:flex; align-items:center; gap:8px; }
-  .dot { width:10px; height:10px; border-radius:50%; background:#555; flex-shrink:0; }
-  .dot.green { background:#4caf50; }
-  .dot.red   { background:#f44336; }
 </style>
 </head>
 <body>
-
 <div id="status">
-  <div class="row"><div class="dot" id="d-cam"></div><span id="t-cam">Camera: waiting…</span></div>
-  <div class="row"><div class="dot" id="d-mark"></div><span id="t-mark">Marker: not detected</span></div>
-  <div class="row"><div class="dot" id="d-model"></div><span id="t-model">Model: loading…</span></div>
+  Camera: <span id="t-cam">waiting…</span><br>
+  Marker: <span id="t-mark">not detected</span><br>
+  Model:  <span id="t-model">waiting…</span>
 </div>
 
 <script>
-function set(id, dotId, msg, ok) {
-  document.getElementById(id).textContent = msg;
-  document.getElementById(dotId).className = 'dot ' + (ok ? 'green' : 'red');
-}
-window.addEventListener('camera-init', function() { set('t-cam','d-cam','Camera: active ✓', true); });
-window.addEventListener('camera-error', function() { set('t-cam','d-cam','Camera: BLOCKED ✗', false); });
-window.addEventListener('arjs-video-loaded', function() { set('t-cam','d-cam','Camera: streaming ✓', true); });
+window.addEventListener('camera-init',       function(){ document.getElementById('t-cam').textContent  = 'active ✓'; });
+window.addEventListener('camera-error',      function(){ document.getElementById('t-cam').textContent  = 'BLOCKED ✗'; });
+window.addEventListener('arjs-video-loaded', function(){ document.getElementById('t-cam').textContent  = 'streaming ✓'; });
 
-AFRAME.registerComponent('marker-status', {
+AFRAME.registerComponent('marker-watch', {
   init: function() {
-    var el = this.el;
-    el.addEventListener('markerFound', function() {
-      set('t-mark','d-mark','Marker: DETECTED ✓', true);
+    this.el.addEventListener('markerFound', function(){
+      document.getElementById('t-mark').textContent = 'DETECTED ✓';
     });
-    el.addEventListener('markerLost', function() {
-      set('t-mark','d-mark','Marker: lost…', false);
+    this.el.addEventListener('markerLost', function(){
+      document.getElementById('t-mark').textContent = 'lost…';
+    });
+  }
+});
+
+AFRAME.registerComponent('model-watch', {
+  init: function() {
+    this.el.addEventListener('model-loaded', function(){
+      document.getElementById('t-model').textContent = 'loaded ✓';
+    });
+    this.el.addEventListener('model-error', function(e){
+      document.getElementById('t-model').textContent = 'ERROR: ' + (e.detail && e.detail.src);
     });
   }
 });
@@ -57,22 +57,17 @@ AFRAME.registerComponent('marker-status', {
   renderer="precision:medium;alpha:true;antialias:true;"
   vr-mode-ui="enabled:false">
 
-  <a-assets timeout="20000">
-    <a-asset-item id="cola" src="/cola_glass.glb" crossorigin="anonymous"
-      onload="set('t-model','d-model','Model: loaded ✓', true)"
-      onerror="set('t-model','d-model','Model: FAILED to load ✗', false)">
-    </a-asset-item>
-  </a-assets>
-
   <a-marker type="pattern" url="/markers/waikikiAR.patt"
-    smooth="true" smoothCount="5" marker-status>
+    smooth="true" smoothCount="5" marker-watch>
 
-    <!-- RED BOX — appears immediately when marker is detected (no model needed) -->
-    <a-box position="0 0.5 0" scale="0.3 0.3 0.3" color="#ff0000" opacity="0.9"></a-box>
+    <!-- RED BOX — confirms marker detection, no model needed -->
+    <a-box position="0 0.5 0" scale="0.3 0.3 0.3" color="red"></a-box>
 
-    <!-- GLB model — test at multiple scales -->
+    <!-- GLB loaded via direct URL (bypasses asset preloader) -->
     <a-entity
-      gltf-model="#cola"
+      id="glb-entity"
+      gltf-model="url(/cola_glass.glb)"
+      model-watch
       position="0 0 0"
       scale="0.3 0.3 0.3"
       animation="property:rotation;to:0 360 0;loop:true;dur:4000;easing:linear">
