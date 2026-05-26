@@ -9,67 +9,61 @@
 <script src="https://cdn.jsdelivr.net/gh/aframevr/aframe@1.6.0/dist/aframe-master.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
 <style>
-  body { margin:0; overflow:hidden; background:#000; }
-  #status {
-    position:fixed; top:0; left:0; right:0; z-index:999;
-    background:rgba(0,0,0,.75); color:#fff; font:bold 13px/1.6 sans-serif;
-    padding:10px 14px; pointer-events:none;
-  }
+  body{margin:0;overflow:hidden;background:#000}
+  #st{position:fixed;top:0;left:0;right:0;z-index:999;background:rgba(0,0,0,.7);
+    color:#fff;font:bold 12px/1.8 sans-serif;padding:8px 12px;pointer-events:none}
 </style>
 </head>
 <body>
-<div id="status">
-  Camera: <span id="t-cam">waiting…</span><br>
-  Marker: <span id="t-mark">not detected</span><br>
-  Model:  <span id="t-model">waiting…</span>
-</div>
+<div id="st">Camera: <span id="tc">…</span> | Marker: <span id="tm">…</span> | Model: <span id="tmd">…</span></div>
 
 <script>
-window.addEventListener('camera-init',       function(){ document.getElementById('t-cam').textContent  = 'active ✓'; });
-window.addEventListener('camera-error',      function(){ document.getElementById('t-cam').textContent  = 'BLOCKED ✗'; });
-window.addEventListener('arjs-video-loaded', function(){ document.getElementById('t-cam').textContent  = 'streaming ✓'; });
-
-AFRAME.registerComponent('marker-watch', {
-  init: function() {
-    this.el.addEventListener('markerFound', function(){
-      document.getElementById('t-mark').textContent = 'DETECTED ✓';
-    });
-    this.el.addEventListener('markerLost', function(){
-      document.getElementById('t-mark').textContent = 'lost…';
-    });
-  }
-});
-
-AFRAME.registerComponent('model-watch', {
-  init: function() {
-    this.el.addEventListener('model-loaded', function(){
-      document.getElementById('t-model').textContent = 'loaded ✓';
-    });
-    this.el.addEventListener('model-error', function(e){
-      document.getElementById('t-model').textContent = 'ERROR: ' + (e.detail && e.detail.src);
-    });
-  }
-});
+window.addEventListener('arjs-video-loaded', function(){ document.getElementById('tc').textContent='✓'; });
+window.addEventListener('camera-error',      function(){ document.getElementById('tc').textContent='BLOCKED'; });
+AFRAME.registerComponent('mw',{init:function(){
+  this.el.addEventListener('markerFound', function(){ document.getElementById('tm').textContent='LOCKED ✓'; });
+  this.el.addEventListener('markerLost',  function(){ document.getElementById('tm').textContent='lost'; });
+}});
+AFRAME.registerComponent('ml',{init:function(){
+  this.el.addEventListener('model-loaded', function(){ document.getElementById('tmd').textContent='loaded ✓'; });
+  this.el.addEventListener('model-error',  function(){ document.getElementById('tmd').textContent='ERROR ✗'; });
+}});
 </script>
 
-<a-scene embedded
-  arjs="sourceType:webcam;debugUIEnabled:false;"
-  renderer="precision:medium;alpha:true;antialias:true;"
+<a-scene embedded arjs="sourceType:webcam;debugUIEnabled:false;"
+  renderer="precision:medium;alpha:true;antialias:true;colorManagement:true;"
   vr-mode-ui="enabled:false">
 
-  <a-marker type="pattern" url="/markers/waikikiAR.patt"
-    smooth="true" smoothCount="5" marker-watch>
+  <!-- Explicit lights so glass materials render correctly -->
+  <a-light type="ambient" intensity="1.5"></a-light>
+  <a-light type="directional" position="1 2 1" intensity="2"></a-light>
 
-    <!-- RED BOX — confirms marker detection, no model needed -->
-    <a-box position="0 0.5 0" scale="0.3 0.3 0.3" color="red"></a-box>
+  <a-marker type="pattern" url="/markers/waikikiAR.patt" smooth="true" mw>
 
-    <!-- GLB loaded via direct URL (bypasses asset preloader) -->
-    <a-entity
-      id="glb-entity"
-      gltf-model="url(/cola_glass.glb)"
-      model-watch
-      position="0 0 0"
-      scale="0.3 0.3 0.3"
+    <!-- Scale reference: tiny red box at center -->
+    <a-box position="0 0.1 0" scale="0.15 0.15 0.15" color="red"></a-box>
+
+    <!-- Try scale 0.05 — far left -->
+    <a-entity gltf-model="url(/cola_glass.glb)" ml
+      position="-1.5 0 0" scale="0.05 0.05 0.05"
+      animation="property:rotation;to:0 360 0;loop:true;dur:4000;easing:linear">
+    </a-entity>
+
+    <!-- Try scale 0.1 -->
+    <a-entity gltf-model="url(/cola_glass.glb)"
+      position="-0.5 0 0" scale="0.1 0.1 0.1"
+      animation="property:rotation;to:0 360 0;loop:true;dur:4000;easing:linear">
+    </a-entity>
+
+    <!-- Try scale 0.3 — center right -->
+    <a-entity gltf-model="url(/cola_glass.glb)"
+      position="0.5 0 0" scale="0.3 0.3 0.3"
+      animation="property:rotation;to:0 360 0;loop:true;dur:4000;easing:linear">
+    </a-entity>
+
+    <!-- Try scale 1.0 — far right -->
+    <a-entity gltf-model="url(/cola_glass.glb)"
+      position="1.5 0 0" scale="1 1 1"
       animation="property:rotation;to:0 360 0;loop:true;dur:4000;easing:linear">
     </a-entity>
 
