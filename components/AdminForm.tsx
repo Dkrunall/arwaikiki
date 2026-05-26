@@ -185,7 +185,6 @@ export default function AdminForm({ initialData, onSave, onCancel }: AdminFormPr
           .insert([cocktailPayload])
           .select();
 
-        console.log('Insert result:', { insertData, insertError });
         if (insertError) throw insertError;
         setSuccessMsg('Cocktail added successfully!');
         resetForm();
@@ -197,7 +196,6 @@ export default function AdminForm({ initialData, onSave, onCancel }: AdminFormPr
       }, 800);
 
     } catch (err: any) {
-      console.error('Full save error:', err);
       // Build a detailed error message including Supabase-specific fields
       const details = [
         err.message,
