@@ -488,13 +488,12 @@ window.addEventListener('camera-error', function() {
 
     </a-entity>
 
-    <!-- 3D model — floats on marker when model_url exists -->
-    <a-entity id="ar-3d" scale="0 0 0" position="0 0.1 0">
+    <!-- 3D model — tilted toward camera, spins on Y -->
+    <a-entity id="ar-3d" scale="0 0 0" position="0 0.1 0" rotation="-70 0 0">
       <a-gltf-model id="ar-model"
         src="${f.model_url ? esc(f.model_url) : ''}"
-        scale="0.4 0.4 0.4"
-        rotation="0 0 0"
-        animation="property:rotation;to:0 360 0;loop:true;dur:5000;easing:linear">
+        scale="0.006 0.006 0.006"
+        animation="property:rotation;from:0 0 0;to:0 360 0;loop:true;dur:6000;easing:linear">
       </a-gltf-model>
     </a-entity>
 
