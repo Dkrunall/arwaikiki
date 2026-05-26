@@ -12,9 +12,33 @@ const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
 });
 
+const BASE_URL = 'https://arwaikiki.vercel.app';
+
 export const metadata: Metadata = {
-  title: "Waikiki Bar - Interactive WebAR Cocktail Menu",
-  description: "Experience the cocktails of Waikiki Bar in interactive WebAR. Point your camera at the Hiro coaster and watch your drinks float in 3D!",
+  metadataBase: new URL(BASE_URL),
+  title: {
+    default: 'Waikiki Bar — Interactive WebAR Cocktail Menu',
+    template: '%s | Waikiki Bar',
+  },
+  description: 'Scan your cocktail QR code, point your camera at the table coaster, and watch your drink float in 3D. The future of bar menus.',
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: BASE_URL,
+    siteName: 'Waikiki Bar',
+    title: 'Waikiki Bar — Interactive WebAR Cocktail Menu',
+    description: 'Scan your cocktail QR code, point your camera at the table coaster, and watch your drink float in 3D.',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Waikiki Bar — Interactive WebAR Cocktail Menu',
+    description: 'Scan your cocktail QR code, point your camera at the table coaster, and watch your drink float in 3D.',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true },
+  },
 };
 
 export const viewport: Viewport = {

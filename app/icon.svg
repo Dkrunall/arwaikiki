@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <rect width="32" height="32" rx="8" fill="#510909"/>
+  <!-- cocktail bowl -->
+  <polygon points="7,8 25,8 16,18" fill="#fcefd4"/>
+  <!-- liquid highlight -->
+  <polygon points="7,8 25,8 22,11 10,11" fill="#7a1212" opacity="0.6"/>
+  <!-- stem -->
+  <rect x="15" y="18" width="2" height="5" fill="#fcefd4"/>
+  <!-- base -->
+  <rect x="11" y="23" width="10" height="2" rx="1" fill="#fcefd4"/>
+  <!-- olive/cherry -->
+  <circle cx="22" cy="8" r="2" fill="#c29a53"/>
+</svg>
