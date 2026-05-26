@@ -488,18 +488,20 @@ window.addEventListener('camera-error', function() {
 
     </a-entity>
 
-    <!-- 3D model — tilted toward camera, spins on Y -->
-    <a-entity id="ar-3d" scale="0 0 0" position="0 0.1 0" rotation="-70 0 0">
+    <!-- 3D model — upright, faces camera, gentle float -->
+    <a-entity id="ar-3d" scale="0 0 0">
       <a-gltf-model id="ar-model"
         src="${f.model_url ? esc(f.model_url) : ''}"
+        position="0 0.5 0"
         scale="0.006 0.006 0.006"
-        animation="property:rotation;from:0 0 0;to:0 360 0;loop:true;dur:6000;easing:linear">
+        look-at="#cam"
+        animation__float="property:position;from:0 0.4 0;to:0 0.6 0;loop:true;dur:2000;dir:alternate;easing:easeInOutSine">
       </a-gltf-model>
     </a-entity>
 
   </a-marker>
 
-  <a-entity camera></a-entity>
+  <a-entity camera id="cam"></a-entity>
 </a-scene>
 
 <!-- HUD overlay -->
