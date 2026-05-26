@@ -321,6 +321,29 @@ ${tot <= 1 ? '.navbtn{opacity:.25;pointer-events:none}' : ''}
 var markerVisible = false;
 var navBusy = false;
 
+/* Touch-rotate: drag finger to spin 3D model */
+AFRAME.registerComponent('touch-rotate', {
+  init: function () {
+    var el = this.el;
+    var startX = 0, startY = 0, baseRotX = 0, baseRotY = 0, curRotX = 0, curRotY = 0, active = false;
+    document.addEventListener('touchstart', function (e) {
+      startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+      baseRotX = curRotX; baseRotY = curRotY; active = true;
+    }, { passive: true });
+    document.addEventListener('touchmove', function (e) {
+      if (!active) return;
+      var dx = e.touches[0].clientX - startX;
+      var dy = e.touches[0].clientY - startY;
+      curRotY = baseRotY + dx * 0.6;
+      curRotX = baseRotX + dy * 0.4;
+      curRotX = Math.max(-75, Math.min(75, curRotX));
+      el.setAttribute('rotation', { x: curRotX, y: curRotY, z: 0 });
+    }, { passive: true });
+    document.addEventListener('touchend',    function () { active = false; });
+    document.addEventListener('touchcancel', function () { active = false; });
+  }
+});
+
 AFRAME.registerComponent('waikiki-events', {
   init: function() {
     var marker   = this.el;
@@ -488,14 +511,13 @@ window.addEventListener('camera-error', function() {
 
     </a-entity>
 
-    <!-- 3D model — upright, faces camera, gentle float -->
-    <a-entity id="ar-3d" scale="0 0 0">
+    <!-- 3D model — floats above marker, drag finger to rotate -->
+    <a-entity id="ar-3d" scale="0 0 0"
+      animation__float="property:position;from:0 0.4 0;to:0 0.6 0;loop:true;dur:2000;dir:alternate;easing:easeInOutSine">
       <a-gltf-model id="ar-model"
         src="${f.model_url ? esc(f.model_url) : ''}"
-        position="0 0.5 0"
         scale="0.006 0.006 0.006"
-        look-at="#cam"
-        animation__float="property:position;from:0 0.4 0;to:0 0.6 0;loop:true;dur:2000;dir:alternate;easing:easeInOutSine">
+        touch-rotate>
       </a-gltf-model>
     </a-entity>
 
